@@ -1,0 +1,78 @@
+---
+title: "Distributed Rate Limiting: Algorithms, Topologies & Redis Lua Scripts"
+brief: "A deep dive into rate limiting in distributed architectures: Token Bucket, Leaky Bucket, Sliding Window Counter, and atomic Redis Lua scripts to eliminate race conditions."
+publishedAt: "2026-10-20T12:00:00Z"
+readTimeInMinutes: 12
+tags:
+  - name: "System Design"
+    slug: "system-design"
+  - name: "Redis"
+    slug: "redis"
+  - name: "Distributed Systems"
+    slug: "distributed-systems"
+series:
+  name: "System Design"
+  slug: "system-design"
+coverImage:
+  url: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&q=80"
+author:
+  name: "Abhinandan Mishra"
+  profilePicture: "https://github.com/abhinandanmishra1.png"
+---
+
+Rate limiting is the first line of defense in protecting distributed services from malicious DDoS attacks, noisy neighbors, and cascading downstream failures. In high-throughput architectures, rate limiting must be accurate, deterministic, and evaluated with sub-millisecond overhead.
+
+---
+
+## The Four Core Rate Limiting Algorithms
+
+When designing an API gateway or edge proxy, different algorithms balance memory overhead and burst tolerance:
+
+1. **Token Bucket:**
+   - Tokens fill at a constant rate $r$ up to capacity $C$.
+   - Allows bursts of up to $C$ requests as long as tokens are available.
+   - Ideal for general-purpose REST APIs.
+
+2. **Leaky Bucket:**
+   - Requests enter a queue of fixed capacity and are processed at a strictly constant rate.
+   - Smoothes out traffic spikes; drops packets if the buffer overflows.
+   - Ideal for egress traffic shaping.
+
+3. **Fixed Window Counter:**
+   - Counts requests within time buckets (e.g. 1-minute window).
+   - Vulnerable to the **2x traffic burst** at window boundaries.
+
+4. **Sliding Window Counter:**
+   - Blends the previous window count with current window count based on elapsed timestamp overlap.
+   - Provides smooth throttling with minimal memory overhead compared to storing raw timestamps.
+
+---
+
+## Atomic Sliding Window with Redis Lua Scripts
+
+In a multi-instance service, checking and updating counters across multiple network roundtrips introduces race conditions. We execute an atomic Redis Lua script:
+
+```lua
+local key = KEYS[1]
+local limit = tonumber(ARGV[1])
+local current_time = tonumber(ARGV[2])
+local window = tonumber(ARGV[3])
+local clear_before = current_time - window
+
+-- Remove timestamps older than the sliding window
+redis.call('ZREMRANGEBYSCORE', key, 0, clear_before)
+
+-- Count current requests in window
+local current_requests = redis.call('ZCARD', key)
+
+if current_requests < limit then
+    -- Add unique request timestamp to sorted set
+    redis.call('ZADD', key, current_time, current_time)
+    redis.call('EXPIRE', key, window)
+    return 1 -- Allowed
+else
+    return 0 -- Rejected (HTTP 429 Too Many Requests)
+end
+```
+
+By executing this logic inside Redis's single-threaded event loop, we eliminate race conditions with zero distributed locking overhead.
