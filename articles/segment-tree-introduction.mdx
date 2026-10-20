@@ -1,0 +1,325 @@
+---
+title: "Segment Tree: Introduction"
+brief: "This article covers about the basics of segment tree"
+publishedAt: "2025-10-05T10:25:14.532Z"
+category: "Data Structures & Algorithms"
+tags:
+  - "Data Structures & Algorithms"
+  - "Segment Tree"
+  - "Trees"
+  - "Algorithms"
+series:
+  name: "DSA & Algorithms"
+  slug: "dsa"
+coverImage:
+  url: "/content/articles/images/segment-tree-introduction/cover.png"
+---
+You might have solved problems that involve **ranges and multiple queries**, like finding the sum or minimum in a subarray repeatedly.  
+If you’ve ever thought,
+
+> “There must be a faster way than recalculating everything each time…”
+
+then **Segment Tree** is *the* data structure for it — allowing **range queries** and **updates** efficiently in **O(log n)** time.
+
+We’ll use the following **CSES problems** as our running examples:
+
+* ✅ *Static Range Sum Queries*
+    
+* ⚡ *Dynamic Range Sum Queries*
+    
+
+We’ll build everything step by step — **understanding + code**.
+
+---
+
+## What is a Segment Tree?
+
+A **Segment Tree** is a binary tree built over an array:
+
+* **Leaves** store individual array elements.
+    
+* **Internal nodes** store results of a chosen operation (sum, min, max) over a segment.
+    
+
+### Example Array: `[1, 3, 5, 7, 9, 11]`
+
+![Illustration 1](/content/articles/images/segment-tree-introduction/inline-image-1.png)
+
+The **root** stores the sum of the entire array.  
+Each internal node stores the **operation** applied to its segment, while the leaf nodes represent the actual elements in the array. The highlighted nodes in the image above are leaf nodes, and you can see that the start and end for these nodes are the same, equal to the index of that element in the array.
+
+---
+
+## Step 1: Building the Tree
+
+We recursively divide the array:
+
+* **Base case:** `lo == hi` → leaf node stores `arr[lo]`. (as we saw in the above image)
+    
+* **Recursive case:** build left/right children, then combine using the operation.
+    
+
+**Code: Build Tree**
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+using ll = long long;
+
+ll NEUTRAL = 0; // NEUTRAL value changes based on the problem - for sum 0 is neutral
+ll operation(ll a, ll b) { return a + b; } // this is the operation the problem is asking
+
+vector<ll> tree;
+
+void build(vector<ll>& arr, ll lo, ll hi, ll node) {
+    if (lo == hi) {
+        tree[node] = arr[lo];
+        return;
+    }
+    ll mid = lo + (hi - lo) / 2;
+    build(arr, lo, mid, 2 * node + 1);
+    build(arr, mid + 1, hi, 2 * node + 2);
+    tree[node] = operation(tree[2 * node + 1], tree[2 * node + 2]);
+}
+
+int main() {
+    vector<ll> arr = {2, 5, 1, 4};
+    ll n = arr.size();
+    tree.resize(4 * n);
+    build(arr, 0, n - 1, 0);
+
+    // Tree is now built
+    for (ll i = 0; i < 4 * n; i++) cout << tree[i] << " ";
+}
+```
+
+✅ **Complexity:** O(n)
+
+---
+
+## Step 2: Querying a Range `[l, r]`
+
+We want to compute something like:
+
+> “Sum (or min/max) of elements from index `l` to `r`”
+
+### Overlap Cases:
+
+There are only three possibilities for given a range `[l, r]` , we do a dfs on the above tree (similarly as we did in build function)
+
+1. **No overlap:** `[lo, hi]` outside `[l, r]` → return neutral element. (this will not have any contribution in the final result)
+    
+2. **Complete overlap:** `[lo, hi]` inside `[l, r]` → return `tree[node]`.
+    
+3. **Partial overlap:** recurse on left and right children and combine.
+    
+
+**Code: Query Range**
+
+```cpp
+ll query(ll start, ll end, ll lo, ll hi, ll node) {
+    if (hi < start || lo > end) return NEUTRAL; // No overlap
+    if (lo >= start && hi <= end) return tree[node]; // Complete overlap
+    ll mid = lo + (hi - lo) / 2;
+    return operation(
+        query(start, end, lo, mid, 2 * node + 1),
+        query(start, end, mid + 1, hi, 2 * node + 2)
+    );
+}
+
+// Usage example
+int main() {
+    vector<ll> arr = {1, 3, 5, 7, 9, 11};
+    ll n = arr.size();
+    tree.resize(4 * n);
+    build(arr, 0, n - 1, 0);
+
+    cout << query(1, 3, 0, n - 1, 0) << "\n"; // Sum from index 1 to 3 = 3+5+7=15
+}
+```
+
+✅ **Complexity:** O(log n)
+
+### Find the sum of numbers in range \[1-3\]
+
+![Illustration 2](/content/articles/images/segment-tree-introduction/inline-image-2.png)
+
+### Dry Run
+
+We want `sum(arr[1..3])`
+
+**Call:** `query(1, 3, 0, 5, 0)`
+
+1. Node 0 `[0,5]` → Partial overlap → split into left `[0,2]` and right `[3,5]`
+    
+
+### Left `[0,2]` (node 1)
+
+* `[0,2]` partial overlap with `[1,3]` → split into `[0,1]` and `[2,2]`
+    
+
+#### `[0,1]` (node 3)
+
+* `[0,1]` partial overlap → `[0,0]` no overlap → 0
+    
+* `[1,1]` full overlap → 3
+    
+* Combine → 0 + 3 = 3
+    
+
+#### `[2,2]` (node 4) full overlap → 5
+
+* Combine `[0,2]` → 3 + 5 = 8
+    
+
+### Right `[3,5]` (node 2)
+
+* `[3,5]` partial overlap → `[3,4]` and `[5,5]`
+    
+
+#### `[3,4]` (node 5)
+
+* `[3,4]` partial overlap → `[3,3]` full overlap → 7
+    
+* `[4,4]` outside `[1,3]` → 0
+    
+* Combine = 7 + 0 = 7
+    
+
+#### `[5,5]` (node 6) outside → 0
+
+* Combine `[3,5]` → 7 + 0 = 7
+    
+* Combine root → 8 + 7 = 15 ✅ Correct
+    
+
+---
+
+## 4️⃣ Step 3: Point Update
+
+Suppose we want to **change an element**: `arr[idx] = val`.  
+We only update the **leaf node** and its **ancestors** up to the root.
+
+**Code: Point Update**
+
+```cpp
+void update(ll idx, ll val, ll lo, ll hi, ll node) {
+    if (lo == hi) {
+        tree[node] = val;
+        return;
+    }
+    ll mid = lo + (hi - lo) / 2;
+    if (idx <= mid) update(idx, val, lo, mid, 2 * node + 1);
+    else update(idx, val, mid + 1, hi, 2 * node + 2);
+    tree[node] = operation(tree[2 * node + 1], tree[2 * node + 2]);
+}
+
+// Usage example
+int main() {
+    vector<ll> arr = {1, 3, 5, 7, 9, 11};
+    ll n = arr.size();
+    tree.resize(4 * n);
+    build(arr, 0, n - 1, 0);
+
+    update(2, 10, 0, n - 1, 0); // arr[2] = 10
+    cout << query(1, 3, 0, n - 1, 0) << "\n"; // Updated sum
+}
+```
+
+✅ **Complexity:** O(log n)
+
+![Illustration 3](/content/articles/images/segment-tree-introduction/inline-image-3.png)
+
+### Dry Run
+
+**Call:** `update(2, 10, 0, 5, 0)`
+
+* Node 0 `[0,5]` → idx=2 ≤ mid=2 → go left `[0,2]` (node 1)
+    
+* `[0,2]` → idx=2 &gt; mid=1 → go right `[2,2]` (node 4)
+    
+* `[2,2]` leaf → tree\[4\] = 10
+    
+
+Update ancestors:
+
+* Node 1 `[0,2]` → combine: tree\[3\] + tree\[4\] = 4 + 10 = 14
+    
+* Root `[0,5]` → combine: tree\[1\] + tree\[2\] = 14 + 27 = 41
+    
+
+✅ Updated tree root = 41
+
+---
+
+## 5️⃣ Full Template: Build + Query + Update
+
+This **unified template** can handle **both static and dynamic range queries**.  
+Just set `NEUTRAL` and `operation()` according to your problem.
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+using ll = long long;
+
+ll NEUTRAL = 0; // sum
+ll operation(ll a, ll b) { return a + b; }
+
+vector<ll> tree;
+
+void build(vector<ll>& arr, ll lo, ll hi, ll node) {
+    if (lo == hi) { tree[node] = arr[lo]; return; }
+    ll mid = lo + (hi - lo)/2;
+    build(arr, lo, mid, 2*node+1);
+    build(arr, mid+1, hi, 2*node+2);
+    tree[node] = operation(tree[2*node+1], tree[2*node+2]);
+}
+
+ll query(ll start, ll end, ll lo, ll hi, ll node) {
+    if (hi<start || lo>end) return NEUTRAL;
+    if (lo>=start && hi<=end) return tree[node];
+    ll mid = lo + (hi-lo)/2;
+    return operation(query(start,end,lo,mid,2*node+1),
+                     query(start,end,mid+1,hi,2*node+2));
+}
+
+void update(ll idx, ll val, ll lo, ll hi, ll node) {
+    if (lo==hi) { tree[node] = val; return; }
+    ll mid = lo + (hi-lo)/2;
+    if(idx<=mid) update(idx,val,lo,mid,2*node+1);
+    else update(idx,val,mid+1,hi,2*node+2);
+    tree[node] = operation(tree[2*node+1], tree[2*node+2]);
+}
+
+int main() {
+    ll n,q; cin>>n>>q;
+    vector<ll> arr(n); for(ll i=0;i<n;i++) cin>>arr[i];
+
+    tree.resize(4*n);
+    build(arr,0,n-1,0);
+
+    while(q--) {
+        ll type; cin>>type;
+        if(type==1) { // update
+            ll idx,val; cin>>idx>>val; idx--;
+            update(idx,val,0,n-1,0);
+        } else { // query
+            ll l,r; cin>>l>>r; l--; r--;
+            cout<<query(l,r,0,n-1,0)<<"\n";
+        }
+    }
+}
+```
+
+---
+
+## ✅ Summary
+
+| Concept | Complexity |
+| --- | --- |
+| Build | O(n) |
+| Query | O(log n) |
+| Update | O(log n) |
+
+Segment Trees are now ready for **range queries and updates**.  
+In the next part of this series, we’ll dive into **Range Updates with Lazy Propagation**, which is essential for bigger problems.

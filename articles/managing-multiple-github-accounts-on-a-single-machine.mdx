@@ -1,0 +1,132 @@
+---
+title: "Managing Multiple Github Accounts on a Single Machine"
+brief: "A Step-by-Step Guide to Setting Up and Using SSH Keys"
+publishedAt: "2023-02-07T08:33:30.112Z"
+category: "Developer Tooling"
+tags:
+  - "Developer Tooling"
+  - "Git"
+  - "GitHub"
+  - "Productivity"
+series:
+  name: "Developer Productivity"
+  slug: "developer-tools"
+coverImage:
+  url: "/content/articles/images/managing-multiple-github-accounts-on-a-single-machine/cover.webp"
+---
+### Prerequisite:
+
+* You should have a GitHub account.
+    
+* You should have a basic knowledge of how to create repositories, what is git and GitHub and how to use them?
+    
+* This article is for someone who wants to add their personal, and professional github accounts on the same machine.
+    
+
+To set up multiple GitHub accounts on a single machine, you need to use SSH keys. SSH keys are used to authenticate the connection between your computer and GitHub and secure the data transmission.
+
+Follow these steps to set up multiple GitHub accounts on a single machine:
+
+1. Create a folder named `.ssh` in your home directory using the following command:
+    
+
+```bash
+cd ~
+mkdir .ssh
+```
+
+1. Generate SSH keys for each of the two accounts using the following commands:
+    
+    ```bash
+    ssh-keygen -t rsa -P "" -f person1
+    ssh-keygen -t rsa -P "" -f person2
+    ```
+    
+2. It will create the following files inside `.ssh` folder
+    
+    ```bash
+    person1 person1.pub person2 person2.pub
+    ```
+    
+    the `.pub` means -&gt; `public_key` that is used for authentication
+    
+3. You can see the content of `.pub` files using `cat` command or you can open it in `notepad`.
+    
+4. Add the public keys to their respective GitHub accounts by copying the contents of the public key files and adding them as new SSH keys in GitHub. To do this:
+    
+    1. Go to your GitHub account.
+        
+    2. Open settings.
+        
+    3. Inside **SSH and GPG keys**, click on the **New SSH key**.
+        
+    4. Copy the data from [`person1.pub`](http://person1.pub) or [`person2.pub`](http://person2.pub) (depending on the account) from your computer and paste it into the key section in GitHub.
+        
+    5. Set the title as `person1` or `person2` (depending on the account).
+        
+    6. Click **Add SSH Key**.
+        
+5. Create a config file in the `.ssh` folder using the following command:
+    
+    ```bash
+    touch config
+    ```
+    
+6. Edit the config file to specify the location of the private keys for each of the accounts: ( Just paste the following text and change `person1` and `person2` as yours that you used while creating )
+    
+    ```xml
+    Host person1
+      HostName github.com
+      User git
+      IdentityFile ~/.ssh/person1
+    
+    Host person2
+      HostName github.com
+      User git
+      IdentityFile ~/.ssh/person2
+    ```
+    
+7. To clone a repository, use the following commands:
+    
+    ```bash
+    # cloning as person1: 
+    git clone person1:<github-username-1>/repo1.git
+    
+    # cloning as person2:
+    git clone person2:<github-username-2>/repo2.git
+    ```
+    
+8. To set the correct authority for each repository, set the user name and email address for each repository separately using the following commands:
+    
+    ```bash
+    # For Person1:
+    git config user.name person1
+    git config user.email email_id_of_person1
+    
+    # For Person2:
+    git config user.name person2
+    git config user.email email_id_of_person2
+    ```
+    
+
+By following these steps, you should be able to successfully set up multiple GitHub accounts on a single machine.
+
+> **Sometimes there occurs a problem in setting remote origin**:
+> 
+> Using the following command might solve the problem:
+> 
+> If a GitHub repository looks like this:- `https://github.com/username/reponame.git` then for adding it as a remote origin, the following command can be used :
+> 
+> ```bash
+> # for person1: 
+> git remote add origin person1:username/reponame.git
+> 
+> # for person2: 
+> git remote add origin person2:username/reponame.git
+> ```
+
+That's all about it.
+
+Hope you find the blog useful. If yes, then do upvote it.
+
+Thank you for reading!!

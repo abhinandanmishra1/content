@@ -1,0 +1,245 @@
+---
+title: "The Power of Custom Hooks: Reusable Logic for React Applications"
+brief: "In this blog, you will learn about custom hooks in best and easiest way."
+publishedAt: "2023-02-17T09:32:43.461Z"
+category: "React & Frontend"
+tags:
+  - "React & Frontend"
+  - "React"
+  - "Hooks"
+series:
+  name: "React Hands-On"
+  slug: "react-hands-on-series"
+coverImage:
+  url: "/content/articles/images/the-power-of-custom-hooks-reusable-logic-for-react-applications/cover.webp"
+---
+### Prerequisite
+
+* Should know basic React, React Hooks and JavaScript functions.
+    
+* Read my previous blogs about React and React hooks for a better understanding.
+    
+
+### Recall: React hooks
+
+Hooks provide a way to use state and other React features in functional components, which were previously limited to only rendering UI. By using hooks, developers can reuse code, write more concise and cleaner code, and easily share stateful logic between components.
+
+In our previous posts, we covered the built-in React hooks such as `useState`, `useEffect`, `useContext`, and `useReducer`. These hooks provide a solid foundation for many common use cases, but what if we need to share more complex logic between different components?
+
+### Why custom hooks?
+
+The built-in hooks in React, such as `useState`, `useEffect`, `useContext`, and `useReducer` covers a wide range of use cases and we can implement any feature using these only.
+
+**Then the question again remains, why do we need custom hooks?**
+
+Suppose we have some logic that makes use of multiple built-in hooks and other react features and the same logic has been used in multiple components in your web application. Then writing the same code in each component separately breaks the famous DRY principle ( <mark>Don't repeat Yourself</mark>).
+
+To solve this problem, we can create a custom hook that encapsulates the reusable logic in a single function. This custom hook can then be used in multiple components to simplify the code and make it more readable.
+
+Custom hooks allow us to extract and reuse complex logic as a standalone function, and use it in multiple components.
+
+### What are custom hooks?
+
+Custom hooks are functions that start with the `use` prefix and use other React hooks to provide a reusable piece of logic. They allow us to extract complex logic from our components and make it more reusable and easier to maintain.
+
+Let's understand it by an example:
+
+#### Without using custom hooks:
+
+Imagine that we need to create a **TodoList** application that allows users to add **TodoItems** and ensures that the **Todos** remain in sync with the `localStorage`, so that when the page reloads, the Todos are still available.
+
+To accomplish this, we can make use of the `useState` and `useEffect` hooks in React, which will allow us to manage the state of the **TodoList** and keep it in sync with the `localStorage`.
+
+```javascript
+import React, { useState, useEffect } from 'react';
+
+function TodoList() {
+  const storedTodos = JSON.parse(localStorage.getItem('todos') || '[]');
+  const [todos, setTodos] = useState(storedTodos);
+  const [todoInput, setTodoInput] = useState('');
+
+  useEffect(() => {
+    localStorage.setItem('todos', JSON.stringify(todos));
+  }, [todos]);
+
+  const handleAddTodo = () => {
+    setTodos([...todos, { id: Date.now(), text: todoInput }]);
+    setTodoInput('');
+  };
+
+  return (
+    <div>
+      <input value={todoInput} onChange={e => setTodoInput(e.target.value)} />
+      <button onClick={handleAddTodo}>Add Todo</button>
+      <ul>
+        {todos.map(todo => (
+          <li key={todo.id}>{todo.text}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default TodoList;
+```
+
+In this code, we're using the `useState` hook to manage the state of the todo list and `useEffect` to keep it in sync with local storage. The `TodoList` component has become complex with multiple `useEffect` hooks and logic for adding and rendering todos.
+
+To make this code more reusable and easier to maintain, we can extract the state management and local storage synchronization logic into a custom hook.
+
+#### Using custom hook
+
+This is a `useTodoList` hook that uses the same logic as we did above.
+
+```javascript
+// useTodoList Hook
+import { useState, useEffect } from 'react';
+
+function useTodoList() {
+    const storedTodos = JSON.parse(localStorage.getItem('todos') || '[]');
+  const [todos, setTodos] = useState(storedTodos);
+  const [todoInput, setTodoInput] = useState('');
+
+  useEffect(() => {
+    localStorage.setItem('todos', JSON.stringify(todos));
+  }, [todos]);
+
+  const handleAddTodo = () => {
+    setTodos([...todos, { id: Date.now(), text: todoInput }]);
+    setTodoInput('');
+  };
+
+  return { todos, todoInput, setTodoInput, handleAddTodo };
+}
+
+export default useTodoList;
+```
+
+In this custom hook, we've extracted the state management and local storage synchronization logic from the `TodoList` component into a separate hook called `useTodoList`.
+
+The hook returns an object with `todos`, `todoInput`, `setTodoInput`, and `handleAddTodo` as properties. These properties can be used by the `TodoList` component to manage the state of the **TodoList** and keep it in sync with the local storage.
+
+Let's take a look at how we can use this custom hook in our `TodoList` component:
+
+```javascript
+import React from 'react';
+import useTodoList from './useTodoList';
+
+function TodoList() {
+  const { todos, todoInput, setTodoInput, handleAddTodo } = useTodoList();
+
+  return (
+    <div>
+      <input value={todoInput} onChange={e => setTodoInput(e.target.value)} />
+      <button onClick={handleAddTodo}>Add Todo</button>
+      <ul>
+        {todos.map(todo => (
+          <li key={todo.id}>{todo.text}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default TodoList;
+```
+
+As you can see, we simply call our custom hook `useTodoList` and destructure the properties that it returns. We can then use these properties to manage the state of our **TodoList** and render it on the screen.
+
+> The use of custom hooks like this can greatly simplify our code and make it more reusable. We can now easily use the same todo state management logic in other components without having to duplicate the code.
+
+### Data fetching using a custom hook
+
+Another common use case of custom hooks is data fetching. Let's take a look at an example of a custom hook that fetches data from an API.
+
+```javascript
+function useDataFetcher(url) {
+  const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        setData(data);
+      } catch (error) {
+        setError(error);
+      }
+      setIsLoading(false);
+    };
+    fetchData();
+  }, [url]);
+
+  return { data, isLoading, error };
+}
+```
+
+This custom hook `useDataFetcher` takes a URL as an argument and returns an object with `data`, `isLoading`, and `error` as properties. It uses the `useState` and `useEffect` hooks to fetch the data from the specified URL and manage the loading and error states.
+
+We can use this custom hook in our components to fetch data from an API and render it on the screen. Let's take a look at an example:
+
+```javascript
+function Users() {
+  const { data, isLoading, error } = useDataFetcher(
+    "https://jsonplaceholder.typicode.com/users"
+  );
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  return (
+    <div>
+      <h1>Users</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data?.map((user) => (
+            <tr key={user.id}>
+              <td>{user.name}</td>
+              <td>{user.email}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default Users;
+```
+
+**Running Code - useDataFetcher**
+
+%[https://codesandbox.io/s/priceless-microservice-3khzzh?file=/src/App.js] 
+
+> **Should we use custom hooks always?**
+> 
+> As with any tool, it's important to use custom hooks judiciously. While they can be incredibly helpful, they are not always necessary. Sometimes, simply using built-in hooks or plain old React components will do the job just fine. It's important to use your judgment and consider the trade-offs of using custom hooks versus other approaches.
+
+### Conclusion
+
+* Custom hooks are an incredibly powerful tool in React development, allowing you to extract and reuse code across components. They provide a simple and flexible way to abstract away complex logic, making your code more readable, maintainable, and reusable.
+    
+* In this blog post, we looked at two examples of how to use custom hooks to **manage the state in a TodoList** and to **fetch data from an API**. By extracting the logic into custom hooks, we were able to reduce complexity and make the code more modular, which can save a lot of time and effort in the long run.
+    
+* In conclusion, custom hooks are a powerful and flexible tool in React development, allowing you to reuse code across components and abstract away complex logic. They can help make your code more modular and easier to maintain, but they should be used judiciously and in appropriate situations.
+    
+
+> There are some most commonly used custom hooks, which may be used in your next projects.
+> 
+> Read about these hooks and use them in your projects,👉🏻 [**Click Here**](https://usehooks.com/)
+
+Thanks for reading!

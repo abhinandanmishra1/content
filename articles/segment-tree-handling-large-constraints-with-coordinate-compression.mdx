@@ -1,0 +1,473 @@
+---
+title: "Segment Tree: Handling Large Constraints with Coordinate Compression"
+brief: "I encountered the next challenge in the CSES problem set: Salary Queries, a problem rich with concepts and learning opportunities."
+publishedAt: "2025-10-13T14:38:37.714Z"
+category: "Data Structures & Algorithms"
+tags:
+  - "Data Structures & Algorithms"
+  - "Segment Tree"
+  - "Trees"
+  - "Algorithms"
+series:
+  name: "DSA & Algorithms"
+  slug: "dsa"
+coverImage:
+  url: "/content/articles/images/segment-tree-handling-large-constraints-with-coordinate-compression/cover.png"
+---
+While working on range query problems, I gained a solid understanding of how to use segment trees. Typically, we need to create a segment tree on the array. Then, I encountered the next challenge in the CSES problem set: [**Salary Queries**](https://cses.fi/problemset/task/1144/), a problem rich with concepts and learning opportunities.
+
+It wasn't just about segment trees—it was about **thinking practically about data structures**, learning how to **combine multiple techniques**, and transforming a "theoretical idea" into a *high-performing real-world solution*.
+
+---
+
+## **Problem Statement**
+
+The problem requires us to:
+
+* Manage `n` employee salaries: \[p1, p2, p3 … pn\]
+    
+* Support two operations:
+    
+    1. `? a b` → count the number of salaries within the range `[a, b]`.
+        
+    2. `! k x` → update employee `k`’s salary to `x`.
+        
+    3. Constraints  
+        `1 ≤ n, q ≤ 2×10⁵ 1 ≤ salary, x, a, b ≤ 10⁹`
+        
+
+That “10⁹” was the first red flag.  
+I knew that meant:  
+→ **No direct segment tree** on salary values.  
+→ **No array of size 10⁹.**
+
+So the question was:  
+“How do I efficiently handle range queries over such a huge domain?”
+
+---
+
+## **How did i approach it?**
+
+I had only one idea: the problem was asking for the count of employees whose salaries are between `[a, b]`. Because of this, I thought a segment tree could be used, as it asks for a single value for a given range and includes an update operation. If there were no update, a prefix sum could also solve this problem.
+
+Before this problem, I always created a segment tree on the input array to find something like MIN, MAX, or SUM. But this problem was different; it asked for a count between values, not the range of indexes in the given array, but the salary values.
+
+So, to create the segment tree, it should be built on an array where the salary acts as the index and the number of people with that salary is the value at that index.
+
+> Yes, this was the main idea approach, and I was happy with it.
+
+The task was to find the maximum salary in the input array, create an array of size `maxSalary + 1` initialized with 0, and then store the counts of people with salary `i` in `salaryCount[i]`.
+
+Then, create a segment tree on this salaries array, and both the query and update functions can be implemented as needed.
+
+### ✨ Approach Sketch
+
+* Find `maxSalary` among all employees.
+    
+* Create an array `salaryCount[maxSalary + 1]` initialized to `0`.
+    
+* For each employee salary `s`, increment `salaryCount[s]++`.
+    
+* Build a segment tree over `salaryCount`.
+    
+
+After creating the `salaryCount` array, the problem becomes straightforward for a segment tree. Simply build the tree, write a `query` method to find the `SUM` in a given range, and an `update` method to change the salary of an index `k` to `x`. There is a small change in the update: before adding a count for the new salary of employee `k`, you need to decrease the count for the previous salary of that employee. Then, add the new salary in both `salaryCount` and the segment tree. Overall, this approach will solve the problem.
+
+## **Issue in the above approach**
+
+There are two issues with that approach:
+
+1. First, the maximum possible salary is `10⁹`, and creating an array of size `10⁹` isn't feasible, even on a local machine.
+    
+2. Second, if we create a salaries array based on the maximum salary from the input array, we might encounter update or get queries with a salary greater than this, leading to runtime errors or incorrect answers.
+    
+
+I wasn't sure how to solve this issue, and the approach I considered was only suitable for salaries up to the `10^6` or `10^7` range, but not beyond that.
+
+## **I learned about a new concept called coordinate compression**
+
+While looking for ideas, I found a [blog](https://codeforces.com/blog/entry/77128) that explained a technique:
+
+> “Divide the salary range into **buckets of size 100**, and build a segment tree on those buckets.”
+
+That one sentence made everything clear.
+
+I finally understood the link between *discretization* and *range counting*.
+
+So, I decided to try this **bucket-based segment tree** idea in my implementation. Now, the size of the array is reduced to 10^7 if I create a bucket that can hold 100 salaries.
+
+![Illustration 1](/content/articles/images/segment-tree-handling-large-constraints-with-coordinate-compression/inline-image-1.png)
+
+### How to find the count of people within the salary range a - b using this bucket-based segment tree?
+
+It's already given that a &lt;= b.
+
+So, loIndex = getBucketIndex(a), hiIndex = getBucketIndex(b) —&gt; getBucketIndex will return the index of the bucket where the given element is located.
+
+There are two possible conditions: either loIndex == hiIndex (both numbers are in the same bucket) or loIndex &lt; hiIndex (they are in different buckets).
+
+I started with the basics:
+
+1. Created a function to map each salary to its **bucket index**.
+    
+2. Built a **segment tree** over these buckets.
+    
+3. Used an **unordered\_map** to store the frequency of each exact salary.
+    
+
+The idea:
+
+* If both `a` and `b` are in the same bucket → use the map directly.
+    
+* Otherwise:
+    
+    * Use the map for partial buckets (the first and last).
+        
+    * Use the segment tree for full buckets in between.
+        
+
+#### Pseudo Code
+
+```cpp
+    if (loIndex == hiIndex)
+        count = countExact(a, b); // traversing in the map from a to b
+    else {
+        count += countExact(a, loIndex*bucketSize + bucketSize); // left half count
+        count += querySegmentTree(loIndex+1, hiIndex-1);
+        count += countExact(hiIndex*bucketSize + 1, b); // right half count
+    }
+```
+
+And it worked… for small test cases.
+
+But as soon as I submitted it —  
+**TLE**.  
+And sometimes even **wrong answers**.
+
+![Illustration 2](/content/articles/images/segment-tree-handling-large-constraints-with-coordinate-compression/inline-image-2.png)
+
+---
+
+## **Debugging the Hard Way**
+
+For the next 2 days, I debugged everything, updated the update function, the countExact method to navigate on only those values in that map that are stored and no anything else
+
+* I printed the segment tree.
+    
+* I compared partial bucket sums.
+    
+* I rechecked my index math (`x/100`, `(x-1)/100`, etc.).
+    
+* I even doubted my update propagation.
+    
+
+Everything *looked* right, but it was still slow, sometime it gave wrong answer when i updated some approach but rest of the time TLE came, so i thought to improve
+
+Then I realized the real issue wasn’t logic —  
+it was **scale**.
+
+---
+
+## **When 10 Million Buckets is a Bad Idea**
+
+My bucket size was 100.  
+That meant there were roughly `10⁹ / 100 = 10⁷` buckets.
+
+The segment tree, therefore, had about `4 * 10⁷` nodes.  
+Building and querying that much data was never going to pass in 1 second — even if each operation was `O(log N)`.
+
+I finally understood what the real constraint meant:  
+→ *Sometimes, O(log N) is not fast enough if your N is too large.*
+
+That was my first big lesson.
+
+---
+
+## **The “Aha!” Moment**
+
+While analyzing the code, a few ideas came together:
+
+1. **Buckets are an abstraction**, not fixed — I could change their size.
+    
+2. If I make each bucket cover more salaries, I’ll have fewer buckets.
+    
+3. Using an `unordered_map` was fine for frequency counting,  
+    but I needed `lower_bound` to query efficiently — and that’s not possible with unordered\_map.
+    
+
+So I did two key changes:
+
+1. **Increased the bucket size from 100 → 10,000.**  
+    That reduced total buckets from 10 million → 100 thousand.
+    
+2. **Switched from** `unordered_map` → `map`  
+    to efficiently handle range queries (`lower_bound`, ordered traversal).
+    
+
+---
+
+## **The Final Hybrid**
+
+And finally, everything came together beautifully.
+
+The final approach looked like this:
+
+### **1️⃣ Data structures**
+
+* `map<ll, ll> mp` → stores frequency of each exact salary for counting salaries in the same bucket or on left and right parts.
+    
+* `vector<ll> buckets(SIZE)` → stores employee count per bucket.
+    
+* `vector<ll> tree(4*SIZE)` → built over `buckets` for fast range sums.
+    
+
+### **2️⃣ Query logic**
+
+```cpp
+if (a and b in same bucket)
+   -> iterate mp[a..b]
+else
+   -> use mp for partial edges
+   -> use segment tree for full buckets in between
+```
+
+### **3️⃣ Update logic**
+
+```cpp
+remove old salary for employee k
+update old bucket (-1)
+add new salary for employee k
+update new bucket (+1)
+```
+
+With bucket size = 10,000:
+
+* Bucket count ≈ 100,000
+    
+* `log₂(100,000)` ≈ 17
+    
+* Every query/update runs in microseconds.
+    
+
+✅ **No TLE**  
+✅ **Exact correctness**  
+✅ **Elegant simplicity**
+
+---
+
+## **Beyond Code: What I Learned**
+
+When I look back, this problem wasn’t just about segment trees.  
+It was about the *journey of problem solving*.
+
+Here’s what I really learned:
+
+1. **Big-O isn’t everything.**  
+    Practical performance depends on constants, recursion depth, and cache behavior.
+    
+2. **Trade-offs matter.**  
+    Increasing bucket size reduced precision but massively improved speed — and the precision loss didn’t affect correctness.
+    
+3. **Hybrid solutions often win.**  
+    Combining multiple ideas (map + segment tree + buckets) can outperform any single pure structure.
+    
+4. **Know when to simplify.**  
+    At one point, I almost switched to coordinate compression + Fenwick Tree — but staying with the bucket approach helped me understand another way to tackle huge ranges.
+    
+
+---
+
+## **The Final Code**
+
+```cpp
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <numeric>
+#include <map>
+#include <cmath>
+
+using namespace std;
+using ll = long long;
+
+// Constants for Bucketing Optimization
+// Max Salary is 10^9. Bucket Size of 10,000 gives 10^5 buckets, a manageable size for a segment tree.
+const ll MAX_SALARY = 1000000000;
+const ll BUCKET_SIZE = 10000;
+// SIZE is the number of buckets (approx 10^5 + 1)
+const ll SIZE = MAX_SALARY / BUCKET_SIZE + 1;
+
+vector<ll> tree;
+
+ll getBucketIndex(ll x) {
+    if (x <= 0) return 0; 
+    return (x - 1) / BUCKET_SIZE;
+}
+
+void build(const vector<ll>& buckets, ll lo, ll hi, ll node) {
+    if (lo == hi) {
+        tree[node] = buckets[lo];
+        return;
+    }
+
+    ll mid = lo + (hi - lo) / 2;
+    build(buckets, lo, mid, 2 * node + 1);
+    build(buckets, mid + 1, hi, 2 * node + 2);
+    tree[node] = tree[2 * node + 1] + tree[2 * node + 2];
+}
+
+ll query(ll qlo, ll qhi, ll lo, ll hi, ll node) {
+    if (lo > qhi || hi < qlo) return 0;
+
+    if (lo >= qlo && hi <= qhi) return tree[node];
+
+    ll mid = lo + (hi - lo) / 2;
+    ll left = query(qlo, qhi, lo, mid, 2 * node + 1);
+    ll right = query(qlo, qhi, mid + 1, hi, 2 * node + 2);
+
+    return left + right;
+}
+
+void update(ll idx, ll lo, ll hi, ll node, ll delta) {
+    if (lo == hi) {
+        tree[node] += delta;
+        return;
+    }
+
+    ll mid = lo + (hi - lo) / 2;
+    if (idx <= mid) {
+        update(idx, lo, mid, 2 * node + 1, delta);
+    } else {
+        update(idx, mid + 1, hi, 2 * node + 2, delta);
+    }
+
+    tree[node] = tree[2 * node + 1] + tree[2 * node + 2];
+}
+
+ll countElementsInBucket(ll lo, ll hi, map<ll, ll>& mp){
+    ll count = 0;
+
+    auto it1 = mp.lower_bound(lo);
+    while (it1 != mp.end() && it1->first <= hi) {
+        count += it1->second;
+        ++it1;
+    }
+
+    return count;
+}
+
+void solve() {
+    ll n, q;
+    if (!(cin >> n >> q)) return;
+
+    vector<ll> arr(n); 
+    vector<ll> initial_buckets(SIZE, 0); 
+    map<ll, ll> mp; 
+    
+    tree.resize(4 * SIZE, 0);
+
+    for (ll i = 0; i < n; i++) {
+        cin >> arr[i];
+        mp[arr[i]]++;
+        ll ind = getBucketIndex(arr[i]);
+        initial_buckets[ind]++;
+    }
+    
+    build(initial_buckets, 0, SIZE - 1, 0);
+
+    while (q--) {
+        char c;
+        cin >> c;
+
+        if (c == '?') {
+            ll a, b;
+            cin >> a >> b;
+            ll ans = 0;
+
+            ll L = getBucketIndex(a);
+            ll R = getBucketIndex(b);
+
+            if (L == R) {
+                // Case 1: Entire range [a, b] is contained within one bucket.
+                // Search map for values in [a, b]
+                ans += countElementsInBucket(a, b, mp);
+            } else {
+                // Case 2: Range spans multiple buckets.
+
+                // 2a. Start Partial Bucket L: [a, end_of_bucket(L)]
+                // End of bucket L is L * BUCKET_SIZE + BUCKET_SIZE (e.g., L=0 -> 10000)
+
+                ans += countElementsInBucket(a, L * BUCKET_SIZE + BUCKET_SIZE, mp);
+
+                // 2b. Full Middle Buckets: Query segment tree for buckets [L + 1, R - 1]
+                ans += query(L+1, R-1, 0, SIZE - 1, 0);
+
+                // 2c. End Partial Bucket R: [start_of_bucket(R), b]
+                // Start of bucket R is R * BUCKET_SIZE + 1 (e.g., R=1 -> 10001)
+                ans += countElementsInBucket(R * BUCKET_SIZE + 1, b, mp);
+            }
+
+            cout << ans << "\n";
+        } else {
+            ll k, x; // Update salary of person k to x
+            cin >> k >> x;
+            k--; // Convert 1-based index k to 0-based index
+
+            ll old_val = arr[k];
+            ll new_val = x;
+
+            // ---- Remove old value from data structures ----
+            ll old_bucket_index = getBucketIndex(old_val);
+            mp[old_val]--;
+            // Update segment tree for old bucket index (count decreases by 1)
+            update(old_bucket_index, 0, SIZE - 1, 0, -1);
+
+            ll new_bucket_index = getBucketIndex(new_val);
+            mp[new_val]++;
+            // Update segment tree for new bucket index (count increases by 1)
+            update(new_bucket_index, 0, SIZE - 1, 0, 1);
+            
+            // Update the main salary array
+            arr[k] = new_val;
+        }
+    }
+}
+
+int main() {
+    // Fast I/O operations
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    solve();
+    
+    return 0;
+}
+```
+
+---
+
+## **Final Thoughts**
+
+When I started this problem, I only knew the **definition** of a segment tree.  
+Now, I understand its **practical limitations, optimizations, and design flexibility**.
+
+This journey — from struggling with recursion to designing a custom bucketed segment tree — was one of the most satisfying debugging experiences I’ve had.
+
+And that feeling when the final "AC" appears after multiple TLEs? Below are the screenshots where you can see and understand my emotions.
+
+![Illustration 3](/content/articles/images/segment-tree-handling-large-constraints-with-coordinate-compression/inline-image-3.png)
+
+---
+
+### **Takeaway**
+
+> *Don’t just learn data structures.  
+> Learn how to adapt them.*
+> 
+> Because real-world problems don’t care how elegant your O(log N) is —  
+> they care how it performs under pressure.
+
+---
+
+For more articles like this, subscribe to my newsletter. I write about frontend, backend, artificial intelligence, and data structures and algorithms.

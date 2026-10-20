@@ -1,0 +1,280 @@
+---
+title: "React Hooks: The Base of React Components  [Part - 2]"
+brief: "This article explains why hooks are used, what are react hooks and how to use them to make life better?"
+publishedAt: "2023-02-11T09:35:57.521Z"
+category: "React & Frontend"
+tags:
+  - "React & Frontend"
+  - "React"
+  - "Hooks"
+series:
+  name: "React Hands-On"
+  slug: "react-hands-on-series"
+coverImage:
+  url: "/content/articles/images/react-hooks-the-base-of-react-components-part-2/cover.webp"
+---
+### Prerequisite
+
+* Basic knowledge of React - Read my [react blogs](https://abhinandanmishra1.hashnode.dev/)
+    
+* Basic knowledge of hooks - Read the [<mark>previous blog</mark>](https://abhinandanmishra1.hashnode.dev/react-hooks-the-base-of-react-components-part-1).
+    
+
+### What did we learn in the previous blog?
+
+* We learned about how react was before the hooks and how it was very hard for developers to write codes in class-based components.
+    
+* We learned how it was very hard to manage the state of the component and to share it between the components.
+    
+
+### React Built-in Hooks
+
+Here's a list of the most commonly used react hooks:
+
+Basic Hooks
+
+* `useState`
+    
+* `useEffect`
+    
+* `useContext`
+    
+
+#### Additional Hooks
+
+* `useReducer`
+    
+* `useCallback`
+    
+* `useMemo`
+    
+* `useRef`
+    
+* `useLayoutEffect`
+    
+
+Now, we will get to know about the use of each Hook:-
+
+### useState Hook
+
+`useState` is a hook in React that allows you to add a state to functional components.
+
+It returns an array with two elements: the current `state` value and a `setState` function to update the state.
+
+For example, in the todo list component, you can use `useState` to store the list of todo items:
+
+> **Syntax**:  
+> `const [state, setState] = useState(initialState);`
+> 
+> On the left side, we're writing `[state, setState]` that will destructure the array returned by `useState` hook.
+
+```javascript
+import React, { useState } from "react";
+
+function TodoList() {
+    const [todoItems, setTodoItems] = useState([]);
+    const [inputValue, setInputValue] = useState('');
+
+    const updateInputValue = (e) => {
+        setInputValue(e.target.value);
+    }
+
+    const addTodoItem = () => {
+        const updatedTodoItems = [...todoItems, inputValue];
+        setTodoItems(updatedTodoItems);
+        setInputValue("");
+    }
+
+    return (
+        <div>
+            <h1> Todo List </h1>
+            <ul>
+                {todoItems.map((item, index) => (
+                  <li key={index}> 
+                     {item}
+                   </li>
+                ))}
+            </ul>
+            <input value={inputValue} onChange = {updateInputValue} />
+            <button onClick = {addTodoItem} > Add Item </button>
+        </div>
+    )
+}
+
+
+export default TodoList;
+```
+
+#### Code Explanation:
+
+In this code, two instances of `useState` are being used.
+
+The first instance is used to manage the list of todo items:
+
+```javascript
+const [todoItems, setTodoItems] = useState(initialTodoItems);
+```
+
+Here, the initial value of `todoItems` is `initialTodoItems`, which is an array with two items, `["item1", "item2"]`. The `setTodoItems` function is used to update the value of `todoItems`.
+
+The second instance is used to manage the input value:
+
+```javascript
+const [inputValue, setInputValue] = useState("");
+```
+
+Here, the initial value of `inputValue` is an empty string, `""`. The `setInputValue` function is used to update the value of `inputValue`.
+
+The `updateInputValue` function is used to update the `inputValue` when the user types in the input field. The `addTodoItem` the function is used to add a new item to the `todoItems` list when the user clicks the "Add Item" button.
+
+By using `useState`, the Todo List component can keep track of the state of the todoItems and inputValue, allowing for a dynamic and interactive user experience.
+
+### useEffect Hook
+
+`useEffect` is a Hook that allows you to run a piece of code after a component renders, similar to `componentDidMount`, `componentDidUpdate`, and `componentWillUnmount` in class components.
+
+Let's understand the use of `useEffect` by adding extra functionality to keep the TodoList items state in sync with Local Storage, in the above TodoList example.
+
+```javascript
+import React, { useState, useEffect } from "react";
+
+function TodoList() {
+  const initialTodoItems = JSON.parse(localStorage.getItem("todoItems")) || [];
+
+  const [todoItems, setTodoItems] = useState(initialTodoItems);
+  const [inputValue, setInputValue] = useState("");
+
+  useEffect(() => {
+    localStorage.setItem("todoItems", JSON.stringify(todoItems));
+  }, [todoItems]);
+
+  const updateInputValue = (e) => {
+    setInputValue(e.target.value);
+  };
+
+  const addTodoItem = () => {
+    if (inputValue === "") return;
+
+    const updatedTodoItems = [...todoItems, inputValue];
+    setTodoItems(updatedTodoItems);
+    setInputValue("");
+  };
+
+  return (
+    <div>
+      <h1> Todo List </h1>
+      <ul>
+        {todoItems.map((item, index) => (
+          <li key={index}>{item}</li>
+        ))}
+      </ul>
+      <input value={inputValue} onChange={updateInputValue} />
+      <button onClick={addTodoItem}> Add Item </button>
+    </div>
+  );
+}
+
+export default TodoList;
+```
+
+#### Code Explanation:
+
+* When the Todo List component first loads, we retrieve the `todoItems` from local storage using `JSON.parse(localStorage.getItem("todoItems"))` and use it as the initial value for the `todoItems` state. If the `todoItems` are not found in local storage, we use an empty array, `[]`, as the default value.
+    
+* When a new to-do item is added by clicking the "Add Item" button, the `todoItems` state is updated. This updated `todoItems` state is included in the dependency array of the `useEffect`, which triggers the `useEffect`'s callback function to run.
+    
+* As a result, the updated to-do list is synced with the Local Storage.
+    
+
+### useContext hook
+
+`useContext` is a hook in React that allows you to access data from a context object within a functional component.
+
+The `createContext` function is used to create a context object and its `value` property is used to store data that can be accessed by components using the `useContext` hook.
+
+If we add a **theme** to the TodoList example above then the code will look like this: \[See `UseContextExample.js` file\]
+
+%[https://codesandbox.io/s/happy-lederberg-7c34yl?file=/src/UseContextExample.js] 
+
+#### Code Explanation:
+
+* In this code, the `useContext` hook allows the `TodoItem` component to access information stored in a context object called `ThemeContext`. A context object acts as a way to store and share information between different components.
+    
+* The `TodoList` component provides the information for the `ThemeContext` object, which includes the current theme (either "light" or "dark") and a function to change the theme called `toggleTheme`.
+    
+* The `useContext` hook in the `TodoItem` component allows it to access this information without having to pass it down as props through multiple components. This means that when the information stored in the context is updated in the `TodoList` component, it will automatically update in the `TodoItem` component as well.
+    
+
+> Hence, **useContext** is used when we have to use some states in multiple child components and it makes code look much cleaner and removes the headache of passing the `props` to all the child components between the parent component and the child component that uses that props.
+
+### useReducer Hook
+
+The `useReducer` hook is a way to manage state in React applications. It is similar to the `useState` hook, but provides **more powerful and flexible management** of state.
+
+`useReducer` takes two arguments: a **reducer** function and an **initial state**. The reducer function is a pure function that takes the current *state* and an *action*, and based on that action it returns a new state.
+
+The action is an object that describes what happened and provides any necessary data to update the state. The action object looks like this:
+
+```json
+action = { 
+        type: 'type of action to be performed (required)',
+        payload: 'It can be null or some data that is sent for update'
+}
+```
+
+`useReducer` returns an array of length 2, in which the first element denotes the state and the second element is a function (`dispatch`) that is used to dispatch actions.
+
+**Syntax**
+
+```javascript
+// array destructuring is done here  
+const [state, dispatch] = useReducer(reducer, initialState);
+```
+
+> If you found the above statement hard to understand then see the code and read the statement again.
+
+Here is an example of how you might use `useReducer` to manage a counter state:
+
+```javascript
+import React, { useReducer } from "react";
+
+const initialState = { count: 0 };
+
+function reducer(state, action) {
+  switch (action.type) {
+    case "increment":
+      return { count: state.count + 1 };
+    case "decrement":
+      return { count: state.count - 1 };
+    default:
+      throw new Error();
+  }
+}
+
+function Counter() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  return (
+    <>
+      Count: {state.count}
+      <button onClick={() => dispatch({ type: "decrement" })}>-</button>
+      <button onClick={() => dispatch({ type: "increment" })}>+</button>
+    </>
+  );
+}
+```
+
+#### When you should use useReducer?
+
+* You should use `useReducer` when you have state that is complex and requires multiple updates, or when you want to use centralized state management for your application.
+    
+* It is especially useful for state that requires updating based on previous state values, or for managing a state that is used across multiple components.
+    
+* It can be used for creating forms, you can write a single reducer function to handle all types of actions and you don't have to write multiple `useState`.
+    
+
+Thanks for reading the blog.
+
+Hope you have learned something new.
+
+[<mark>Next Blog - On react hook</mark>](https://abhinandanmishra1.hashnode.dev/react-hooks-the-base-of-react-components-part-3)

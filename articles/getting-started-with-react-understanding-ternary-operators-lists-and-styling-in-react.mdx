@@ -1,0 +1,290 @@
+---
+title: "Getting Started with React: Understanding Ternary Operators, Lists, and Styling in react"
+brief: "Learn how to use ternary operator, logical and operator, map in react"
+publishedAt: "2023-01-30T06:01:26.662Z"
+category: "React & Frontend"
+tags:
+  - "React & Frontend"
+  - "React"
+series:
+  name: "React Hands-On"
+  slug: "react-hands-on-series"
+coverImage:
+  url: "/content/articles/images/getting-started-with-react-understanding-ternary-operators-lists-and-styling-in-react/cover.webp"
+---
+### Prerequisite:
+
+* You should have knowledge of the ternary operator, map (a high order function) and basic concepts of javascript.
+    
+* If you want to learn these then read this blog first - [All the javascript you need to know for react.](https://abhinandanmishra1.hashnode.dev/all-the-javascript-you-need-to-know-for-react)
+    
+
+### Ternary Operator in React:
+
+* Ternary operators are a shorthand method for performing an if-else condition in JavaScript. They allow us to conditionally return a value based on a given condition.
+    
+* In **React** we do the same thing but for returning different **Components**, **Values or Html** or **Applying classes or styling** based on specific conditions.
+    
+* Here's an example of how the ternary operator can be used in React for different purposes.
+    
+
+```javascript
+import React from 'react';
+
+function TernaryExample() {
+  const isLoggedIn = false;
+  const device = 'Mobile';
+
+  const bgColor = device == 'Desktop' ? 'red' : 'yellow';
+  // the backgroundColor of div will be red on desktop mode
+  // and yellow in mobile
+
+  return (
+    <div style = { { backgroundColor: bgColor } }>
+      {isLoggedIn ? (
+        <p>Welcome back!</p>
+      ) : (
+        <p>Please login first.</p>
+      )}
+    </div>
+  );
+}
+
+export default TernaryExample;
+```
+
+The code above is an example of how we can use ternary operators in React to make our code more efficient and easier to understand. Ternary operators allow us to write simple if-else conditions more concisely.
+
+In this code, we have two variables: `isLoggedIn` and `device`.  
+`isLoggedIn` is set to `false` and `device` is set to `Mobile`.
+
+Next, we use a ternary operator to determine the background color of the `<div>` component. The background color will be **red** if the device is a `Desktop`, and **yellow** if it's a `Mobile`.
+
+Finally, we use a ternary operator again to either render the message "Welcome back!" if the user is logged in, or "Please login first." if they are not logged in.
+
+By using ternary operators in this way, we can make our code more concise and readable, making it easier for other people (and ourselves) to understand what's happening.
+
+> **Note:-** We can use `&&` also when there is a need for only <mark>if condition</mark>.
+
+Suppose, we have a `userDetails` object that contains information about a user, including their name and designation.
+
+By using the logical AND(`&&`) operator, we can ensure that this information is only displayed when the user is logged in and if the "name" and "designation" keys exist in the userDetails object.
+
+Here's an example of how that might look in code:
+
+```javascript
+function TernaryExample() {
+  const isLoggedIn = true;
+  const userDetails = { 
+        name: 'Abhinandan',
+        designation: 'Frontend Developer'
+   };
+  
+  return (
+    <div>
+      {isLoggedIn ? (
+        <div>
+          <p>Welcome back!</p>
+          {userDetails.name && <p>Name: {userDetails.name}</p>}
+          {userDetails.designation && <p>Designation: {userDetails.designation}</p>}
+        </div>
+      ) : (
+        <p>Please login first.</p>
+      )}
+    </div>
+  );
+}
+```
+
+In this example, the `&&` operator is used to displaying the user's name and designation if they exist in the `userDetails` object and if they do not exist, nothing will be displayed.
+
+### Lists in React:
+
+In React, we often need to render a list of items. To do this, we use the map() method.
+
+> The map() method takes an array and returns a new array that has been transformed in some way.
+> 
+> Inside `map`, a function is passed with the `currElement` as a parameter and then we can add our logic to transform `currElement` value and render it accordingly on our page or component.
+
+Let's say in the previous react component if the **userObject** has one more property of **skills**, then to render the skills, `map` can be used as follows:
+
+```javascript
+import React from 'react';
+
+function SkillsListExample() {
+  const isLoggedIn = true;
+  const userDetails = {
+    name: 'Abhinandan Mishra',
+    designation: 'Software Engineer',
+    skills: ['JavaScript', 'React', 'Node.js', 'Express']
+  };
+
+  return (
+    <div>
+      {isLoggedIn ? (
+        <div>
+          <p>Welcome back, {userDetails.name}!</p>
+          <p>Designation: {userDetails.designation}</p>
+          <p>Skills:</p>
+          <ul>
+            {userDetails.skills.map((skill, index) => (
+              <li key={index}>{skill}</li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p>Please login first.</p>
+      )}
+    </div>
+  );
+}
+
+export default SkillsListExample;
+```
+
+In this code, we have added a userDetails object with properties `name`, `designation` and `skills`, which is an array of strings representing the skills of the person.
+
+In the `isLoggedIn` component, we use the `map()` method to iterate over the skills array and render each skill as a list item (`li`) inside an unordered list (`ul`).
+
+> The `key` prop is used to ensure that each list item has a unique key, which is important for performance reasons in React.
+
+The map() method returns a new array that is used inside the HTML to render the list of skills.
+
+> **Good Practice**
+> 
+> We should add a check before running the map function on `userDetails.skills` , whether the `skills` is present in the `userDetails` object or not?
+> 
+> This can be done using `&&` that we learned earlier.
+> 
+> ```javascript
+> <ul>
+>    {
+>         userDetails.skills && 
+>         userDetails.skills.map((skill, index) => (
+>               <li key={index}>{skill}</li>
+>         ))
+>     }
+> </ul>
+> ```
+> 
+> Now, the skills will only be rendered when it will be present in the `userDetails` object and it will not cause any error when skills will not be present.
+
+### Styling in react
+
+In React, there are two main ways to style components: inline styling and external styling.
+
+#### Inline Styling
+
+* Inline styling is the method of adding styles directly to the component using the style prop.
+    
+* A styles object is assigned to `skill` prop in the HTML element and properties are written in **camelCase** instead of **kebab-case** and the values are specified as strings.
+    
+
+Example:-
+
+```javascript
+<div 
+style={
+    {
+        backgroundColor: 'red', 
+        color: 'white', 
+        padding: '10px'
+    }
+}
+>
+  This is an example of inline styling in React
+</div>
+```
+
+#### External Styling
+
+* When styles are kept in a separate CSS file and linked to the component using the link tag in the HTML file or importing it directly in the React component.
+    
+* It is used mostly when the same style is needed in many places and it is a more organized way of writing CSS.
+    
+    ```javascript
+    // App.js
+    import React from 'react';
+    import './App.css';
+    
+    function App() {
+      return (
+        <div className="container">
+          <h1 className="title">Hello World!</h1>
+        </div>
+      );
+    }
+    
+    export default App;
+    ```
+    
+    ```css
+    /* App.css */
+    .container {
+      background-color: red;
+      height: 100vh;
+    }
+    
+    .title {
+      color: white;
+    }
+    ```
+    
+
+### Conclusion
+
+Here's an example of how we can use all the above concepts in a single component.
+
+```javascript
+import React from 'react';
+import './App.css'; // External stylesheet
+
+function Component() {
+  const userDetails = {
+    name: 'Abhinandan Mishra',
+    designation: 'Software Developer',
+    skills: ['React', 'JavaScript', 'CSS']
+  };
+
+  const isLoggedIn = true;
+  const device = 'Desktop';
+  
+  const bgColor = device === 'Desktop' ? 'red' : 'yellow';
+
+  return (
+    <div style={{ backgroundColor: bgColor, padding: '20px' }}>
+      {isLoggedIn ? (
+        <div>
+          <p>Welcome back, {userDetails.name}!</p>
+          <p>Designation: {userDetails.designation}</p>
+          <ul>
+            {userDetails.skills &&
+              userDetails.skills.map((skill, index) => (
+                <li key={index}>{skill}</li>
+              ))}
+          </ul>
+        </div>
+      ) : (
+        <p className="please-login">Please login first.</p>
+      )}
+    </div>
+  );
+}
+
+export default Component;
+```
+
+In the code above:
+
+* Both **inline** and **external styles are** used to style the component.
+    
+* The **ternary operator** is used for rendering the Welcome Message or Login Message based on the login status of the user.
+    
+* The **logical AND(&&)** operator is used to check if `skills` is present or not in `userDetails` object.
+    
+* The **map() is** used to render all the `skills` if it's present.
+    
+
+That's all about this blog.
+
+Thanks for reading! please upvote.

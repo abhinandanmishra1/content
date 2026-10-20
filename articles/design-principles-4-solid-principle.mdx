@@ -1,0 +1,722 @@
+---
+title: "Design Principles #4: SOLID principle"
+brief: "Till now we have learned the following principles that need to be followed to make code flexible and maintainable: Low Coupling (less dependent) and High…"
+publishedAt: "2026-06-11T05:47:47.723Z"
+category: "Low Level Design"
+tags:
+  - "Low Level Design"
+  - "SOLID"
+  - "Clean Code"
+series:
+  name: "Low Level Design"
+  slug: "low-level-design"
+coverImage:
+  url: "/content/articles/images/design-principles-4-solid-principle/cover.png"
+---
+Till now we have learned the following principles that need to be followed to make code flexible and maintainable:
+
+*   **Low Coupling** (less dependent) and **High Cohesion** (highly purpose-specific classes)
+    
+*   **Composition** over **Inheritance** (preferring composition where both can be used, as composition adds more flexibility)
+    
+*   Program to **Abstractions** (instead of being dependent on concrete classes, it's better to use abstract classes or interfaces)
+    
+
+Even after understanding these principles, engineers kept repeating the same mistakes while building systems by:
+
+*   Creating huge classes
+    
+*   Creating tightly coupled entities
+    
+*   Writing less flexible and maintainable code
+    
+
+These issues caused unexpected bugs and made systems difficult to maintain and update.
+
+To solve these problems, Robert C. Martin (Uncle Bob) formalized five principles known as **SOLID**.
+
+The goal of SOLID is simple: **write code that is easy to understand, maintain, extend, and test.**
+
+# S — Single Responsibility Principle (SRP)
+
+This is the easiest and most important principle. It primarily targets making code highly cohesive.
+
+## Definition
+
+> A class should have only one reason to change.
+
+Notice:
+
+It does **not** say:
+
+> A class should do only one thing.
+
+That's a common misunderstanding.
+
+## Bad Example
+
+```java
+class UserService {
+
+    void registerUser() {}
+
+    void saveToDatabase() {}
+
+    void sendWelcomeEmail() {}
+
+    void generateReport() {}
+}
+```
+
+In this code, `UserService` is responsible for registering users, saving data to the database, sending welcome emails, and generating reports.
+
+If in the future there is any change in any of these functionalities, such as:
+
+*   The database changes
+    
+*   The welcome email format is updated
+    
+*   The report generation format changes
+    
+
+then we will need to modify the same `UserService` class in all of these cases.
+
+Hence, it violates the Single Responsibility Principle.
+
+`UserService` should only be responsible for user-related operations. Other functionalities should be moved to separate services according to their responsibilities, making the code more maintainable and highly cohesive.
+
+## Good Example
+
+```java
+class EmailService {
+    // Email related functionalities
+    // If multiple notification channels are introduced in future,
+    // NotificationService abstraction can be introduced.
+    void sendWelcomeEmail() {}
+}
+
+class ReportService {
+    // Report generation related functionalities
+    void generateReport() {}
+}
+
+class UserRepository {
+    // Database operations related to user data
+    void saveUser() {}
+}
+
+class UserService {
+    private EmailService emailService;
+    private UserRepository userRepository;
+
+    UserService(
+        EmailService emailService,
+        UserRepository userRepository
+    ) {
+        this.emailService = emailService;
+        this.userRepository = userRepository;
+    }
+
+    void registerUser(User user) {
+        // User-related business logic
+        userRepository.saveUser(user);
+
+        emailService.sendWelcomeEmail(user);
+    }
+}
+```
+
+As you can see, this code follows the Single Responsibility Principle.
+
+Now each class has a well-defined responsibility:
+
+*   `EmailService` handles email-related operations
+    
+*   `ReportService` handles report generation
+    
+*   `UserRepository` handles database operations
+    
+*   `UserService` handles user-related business logic
+    
+
+In the future, if there is a requirement to support multiple notification platforms, `EmailService` can be generalized further. However, based on the current requirements, this is a good design.
+
+SRP is essentially a practical way of achieving **High Cohesion**.
+
+# O — Open Closed Principle (OCP)
+
+We have learned that classes should have a single responsibility and code should be loosely coupled and highly cohesive.
+
+But there's one more isue that generally arrives, when a system is perfectly working in production and a new requirements arrives then most developers generally start making change in existing codes.
+
+The more we modify the existing code, higher the chances of introducing bugs in to the working system and to solve this issue the Open Closed Principle was introduced.
+
+## Definition
+
+> Software entities should be open for extension but closed for modification.
+
+This means:
+
+*   We should be able to add new functionality.
+    
+*   We should not have to modify already tested and working code.
+    
+
+## Bad Example
+
+Suppose current system supports notification with email only.
+
+```java
+class NotificationService {
+    void sendNotification(String type) {
+        if(type.equals("EMAIL")) {
+            System.out.println("Sending Email");
+        }
+    }
+}
+```
+
+Now the business wants SMS notifications.
+
+We modify the code:
+
+```java
+class NotificationService {
+
+    void sendNotification(String type) {
+
+        if(type.equals("EMAIL")) {
+            System.out.println("Sending Email");
+        }
+
+        else if(type.equals("SMS")) {
+            System.out.println("Sending SMS");
+        }
+    }
+}
+```
+
+A few weeks later:
+
+```java
+class NotificationService {
+
+    void sendNotification(String type) {
+
+        if(type.equals("EMAIL")) {
+            System.out.println("Sending Email");
+        }
+
+        else if(type.equals("SMS")) {
+            System.out.println("Sending SMS");
+        }
+
+        else if(type.equals("WHATSAPP")) {
+            System.out.println("Sending WhatsApp");
+        }
+    }
+}
+```
+
+Every new notification type requires modifying the existing code.
+
+This violates OCP.
+
+The class is not closed for modification.
+
+## Good Example
+
+Instead of handling all notification types in one class, we should use abstraction.
+
+```java
+interface NotificationService {
+    void send();
+}
+```
+
+Implementations:
+
+```java
+class EmailNotificationService implements NotificationService {
+
+    public void send() {
+        System.out.println("Sending Email");
+    }
+}
+```
+
+```java
+class SMSNotificationService implements NotificationService {
+
+    public void send() {
+        System.out.println("Sending SMS");
+    }
+}
+```
+
+Now the client code becomes like this:
+
+```java
+class NotificationManager {
+
+    private NotificationService notificationService;
+
+    NotificationManager( NotificationService notificationService) {
+        this.notificationService = notificationService;
+    }
+
+    void notifyUser() {
+        notificationService.send();
+    }
+}
+```
+
+## Adding New Functionality
+
+Suppose tomorrow we need WhatsApp notifications.
+
+```java
+class WhatsAppNotificationService
+        implements NotificationService {
+
+    public void send() {
+        System.out.println("Sending WhatsApp");
+    }
+}
+```
+
+No existing code changes.
+
+We only extend the system.
+
+This follows OCP.
+
+## Golden Rule
+
+When a new requirement arrives, ask yourself:
+
+> Can I add a new class instead of modifying an existing one?
+
+Answer should be yes to follow the open closed principle.
+
+# L — Liskov Substitution Principle (LSP)
+
+This is probably the most misunderstood SOLID principle.
+
+Most people memorize the definition but don't actually understand why it exists.
+
+Substitution means replacing something with another thing.
+
+### Definition
+
+> Objects of a subclass should be replaceable with objects of the parent class without breaking the correctness of the program.
+
+For example, `Penguin` is a `Bird` and `Sparrow` is also a `Bird`. So, we have to define clasess in such a that if at any place `Bird` is expected and `Penguin` and `Sparrow` should be able to place without any issue.
+
+### Bad Design
+
+```java
+class Bird {
+    void fly() {
+        System.out.println("Flying");
+    }
+}
+
+// Sparrow
+class Sparrow extends Bird {}
+
+// Penguin
+class Penguin extends Bird {
+
+    @Override
+    void fly() {
+        // Penguin can't fly
+        throw new UnsupportedOperationException();
+    }
+}
+```
+
+Now for:
+
+```java
+// this expects Bird
+void makeBirdFly(Bird bird) {
+    bird.fly();
+}
+```
+
+Works for Sparrow:
+
+```java
+makeBirdFly(new Sparrow());
+```
+
+Fails for Penguin:
+
+```java
+makeBirdFly(new Penguin());
+```
+
+Now, the subclass broke the expectation of the parent class, ideally whatever functionalities the parent class have must be supported by child class.
+
+This is like contradicting things.
+
+Penguin behaves like a Bird
+
+Sparrow behaves liek a Bird
+
+But Sparrow can fly and Penguin can't, that contradicts what we thought that a Bird can fly.
+
+> This is why developers mostly choose composition over inheritance.
+
+### Good Design
+
+```java
+class Bird {} 
+
+interface Flyable {
+    void fly();
+}
+```
+
+Now, the `fly` behaviour is separated from the `Bird`
+
+Implementations:
+
+```java
+// Sparrow is a Bird and can fly
+class Sparrow extends Bird implements Flyable {
+    public void fly() {}
+}
+
+// Eagle is a Bird and can fly
+class Eagle extends Bird implements Flyable {
+    public void fly() {}
+}
+
+// Penguin is a Bird and can not fly
+class Penguin extends Bird {   
+}
+```
+
+This design makes more sense now, because now `Sparrow`, `Eagle` and `Penguin`, all of them behaves as a `Bird` and their flying behavior is independent. They all can replace `Bird` class now because `fly` behaviour is not part of `Bird`.
+
+### Easy Way to Identify LSP Violations
+
+Ask yourself:
+
+> If I replace the parent object with the child object, will the application still behave correctly?
+
+If the answer is:
+
+> No
+
+then LSP is probably violated.
+
+## I — Interface Segregation Principle (ISP)
+
+Interface Segregation means splitting the interfaces in multiple interfaces but why do we need to do that?
+
+Suppose we are building a system for workers.
+
+We create an interface:
+
+```java
+interface Worker {
+
+    void work();
+
+    void eat();
+
+    void sleep();
+}
+```
+
+Here, we assumed the worker is a living being and can eat and sleep as well but now machines are also working but they can't sleep and eat.
+
+For HumanWorker:
+
+```java
+class HumanWorker implements Worker {
+
+    public void work() {}
+
+    public void eat() {}
+
+    public void sleep() {}
+}
+```
+
+This looks good.
+
+But for a RobotWorker:
+
+```java
+class RobotWorker implements Worker {
+
+    public void work() {}
+
+    public void eat() {
+        throw new UnsupportedOperationException();
+    }
+
+    public void sleep() {
+        throw new UnsupportedOperationException();
+    }
+}
+```
+
+This is a violation of ISP.
+
+## Definition
+
+> Clients should not be forced to depend upon interfaces they do not use.
+
+In simple words:
+
+> Don't force classes to implement methods they don't need.
+
+Now, for abve Worker interface better way to define it is like this:
+
+```java
+interface Worker {
+    void work();
+}
+
+interface Human {
+    void eat();
+    void sleep();
+}
+```
+
+Now, we have segregated different functionalities in different interface as per the needs.
+
+```java
+class HumanWorker implements Worker, Human {
+    public void work() {}
+    public void eat() {}
+    public void sleep() {}
+}
+
+class RobotWorker implements Worker {
+    public void work() {}
+}
+```
+
+This looks much better and extensible, here worker can be human or robot both and no violation of ISP.
+
+But ISP doesn't mean always segregate the interfaces even if there's not a need. As you can see I segregated `Worker` interface in two interfaces `Worker` and `Human`, becuase the functionalities `eat` and `sleep` both are related to Human. However, you might be thinking of situation where a Worker is eating but not sleeping or vice versa but that type of situation doesn't exist normally and we know in future as well these two types of worker will be there so two interfaces are good enough for this case and even if a new functionality or behaviour comes then this can be segrated further into more and any additive functionality can be extended with a new interface.
+
+## Golden Rule
+
+When designing an interface, ask:
+
+> Will every implementation genuinely need all these methods?
+
+If the answer is **No**, the interface is probably too large and should be split.
+
+## D — Dependency Inversion Principle (DIP)
+
+This is the most important SOLID principle in real world application because modern frameworks like:
+
+*   Spring Boot
+    
+*   ASP .NET Core
+    
+*   Angular
+    
+*   Nestjs
+    
+
+heavily rely on it.
+
+### Why do we need DIP?
+
+We already understood these cases earlier while understanding Program to Interfaces principles and other SOLID principle, the inner concept is same that we have to make code highly cohessive and loosely coupled for better maintainability and extensibility.
+
+Let's understand this by the example of EmailService:
+
+```java
+class EmailService {
+
+    void send() {
+        System.out.println("Sending Email");
+    }
+}
+```
+
+```java
+class UserService {
+
+    private EmailService emailService =
+        new EmailService();
+
+    void registerUser() {
+        emailService.send();
+    }
+}
+```
+
+Now if business requirements changes to support:
+
+*   SMS
+    
+*   Whatsapp
+    
+*   Push Notifications
+    
+
+```java
+class UserService {
+
+    private SMSService smsService =
+        new SMSService();
+
+    private EmailService emailService =
+        new EmailService();
+
+    private WhatsappService whatsappService =
+        new WhatsappService();
+
+    void registerUser(String notificationType) {
+
+        // User registration logic
+
+        if (notificationType.equals("EMAIL")) {
+            emailService.send();
+        }
+        else if (notificationType.equals("SMS")) {
+            smsService.send();
+        }
+        else if (notificationType.equals("WHATSAPP")) {
+            whatsappService.send();
+        }
+    }
+}
+```
+
+Now, if we need to add any other notification type we will have to update UserService and that breaks SRP and OCP both because UserService is tightly coupled to specific implementation.
+
+### Definitions
+
+> High-level modules should not depend on low-level modules. Both should depend on abstractions.
+
+### High-Level Module
+
+Business logic.
+
+Example:
+
+```java
+UserService
+PaymentService
+OrderService
+```
+
+These classes contain business rules.
+
+### Low-Level Module
+
+Implementation details.
+
+Example:
+
+```java
+EmailService
+SMSService
+MySQLRepository
+MongoRepository
+```
+
+These classes perform specific operations.
+
+DIP says:
+
+> Business logic should not directly depend on implementation details.
+
+Now for the above bad design, you might already know now what is the best way to design that by designing an interface `NotificationService` and then using those and passing the notificationService as a dependency to `UserService` instead of initializing it inside the business logic.
+
+```java
+interface NotificationService {
+
+    void send();
+}
+
+class EmailService
+        implements NotificationService {
+
+    public void send() {
+        System.out.println("Sending Email");
+    }
+}
+
+class SMSService
+        implements NotificationService {
+
+    public void send() {
+        System.out.println("Sending SMS");
+    }
+}
+```
+
+```java
+class UserService {
+
+    private NotificationService notificationService;
+
+    UserService(NotificationService notificationService) {
+        this.notificationService = notificationService;
+    }
+
+    void registerUser() {
+        notificationService.send();
+    }
+}
+```
+
+Now, user service is not dependent on the NotificationService and even if a new method comes in future it can be easily integrated without making any change in the UserService.
+
+## Golden Rule
+
+Ask yourself:
+
+> Is my business logic dependent on implementation details?
+
+If yes, DIP may be violated.
+
+Instead, make both depend on an abstraction.
+
+## What's Next?
+
+With this article, we have completed all the foundational design principles that are required before diving into design patterns.
+
+So far we have covered:
+
+*   Low Coupling and High Cohesion
+    
+*   Composition over Inheritance
+    
+*   Program to Abstractions
+    
+*   SOLID Principles
+    
+    *   Single Responsibility Principle (SRP)
+        
+    *   Open Closed Principle (OCP)
+        
+    *   Liskov Substitution Principle (LSP)
+        
+    *   Interface Segregation Principle (ISP)
+        
+    *   Dependency Inversion Principle (DIP)
+        
+
+One thing I realized while learning these principles is that they are not independent of each other. Most of them are interconnected and often solving one problem helps in following multiple principles at the same time.
+
+The goal of all these principles is not to make code complicated by introducing unnecessary abstractions, interfaces, or classes. The actual goal is to write code that is easier to understand, maintain, extend, and test.
+
+In the next article, I will start learning Design Patterns. Now that we understand the problems these principles are trying to solve, it will be easier to understand why different design patterns exist and what problems they were originally designed to address.
+
+As always, these articles are primarily for my own learning and revision. If you find any mistakes or have better approaches, feel free to share them.
+
+Let's continue the journey 🚀

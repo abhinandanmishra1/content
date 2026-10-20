@@ -1,0 +1,113 @@
+---
+title: "Introduction to Computer Networking"
+brief: "This article gives an introduction to computer networks and explains why it was developed and the basic concepts of computer networks"
+publishedAt: "2023-04-07T12:02:14.635Z"
+category: "Computer Networks"
+tags:
+  - "Computer Networks"
+  - "Networking"
+  - "TCP/IP"
+series:
+  name: "Computer Networks"
+  slug: "computer-network"
+coverImage:
+  url: "/content/articles/images/introduction-to-computer-networking/cover.webp"
+---
+## Introduction
+
+Computer networks are an essential part of our daily lives. Whether it's accessing the internet, sending emails, or streaming videos, we rely on networks to transfer data between devices. In this blog, we will take a look at the basics of computer networks, their history, why they are important, and the client-server architecture.
+
+## How it all started?
+
+In the 1960s, the soviet union launched <mark>Sputnik</mark>, the world's first artificial satellite. The US government then created a group called **ARPA** to help them stay ahead of their rivals ([Soviet Union](https://en.wikipedia.org/wiki/Soviet_Union)).
+
+ARPA(Advanced Research Projects Agency) intended to fund research projects so that they can invent the technologies and inventions before any of their rivals. But as it became very hard for the researchers to share information and resources within the organizations in ARPA, so they created a network of computers called ARPANET, which let scientists and researchers share information no matter where they were. It was a big deal because most computers couldn't talk to each other back then.
+
+ARPANET started with just two universities, but more and more places joined in over time. People invented new things to do with the network, like email. Later on, a new network called NSFNET was created to help people in universities share things even more easily.
+
+The internet kept growing and changing over the years. New things were invented like the World Wide Web, and companies started offering internet access to regular people. Now, the internet is a huge network that connects people all over the world, letting us talk, work, and do a lot like you're reading this blog.
+
+## **Why is it important?**
+
+Till now, you might have got some idea about the role of a computer network in our life but let's understand it more.
+
+Computer Network is basically a network of computers/devices that can share information, access resources, collaborate on projects, or live stream from different parts of the world.
+
+From using a USB cable to transfer data, an ethernet for connecting multiple computers or devices in an organization, using Bluetooth and wifi to share data or it's the Internet, everything falls under Computer Network.
+
+So, it doesn't need more explanation why computer network is important because if there's no computer network, you will not be able to read this blog from anywhere until I give my Computer to you.
+
+## **Client-Server Architecture**
+
+Okay, you have now got a basic idea about the use case of a computer network but let's understand how a computer network works and enables us to share data, and resources from one computer to another.
+
+So, the Client-Server architecture is a common model used in computer networks. In this model, there are two types of devices: clients and servers. Clients are devices that request services or resources, while servers are devices that provide those services or resources.
+
+For example, as you're reading this blog on the Hashnode platform, you're sending a request to the Hashnode server to send you the data written inside this blog. When you enter the blog URL, a message is sent to the server, and in response, the Hashnode server sends an HTML file that contains the data of this blog. Your browser then renders the HTML data, and you can see the blog on your device.
+
+In this scenario, your device, which is sending the request to the server, is known as the client. On the other hand, the device that's receiving and processing the request and sending the response back to your device is known as the server.
+
+![Illustration 1](/content/articles/images/introduction-to-computer-networking/inline-image-1.png)
+
+## Protocols
+
+In any type of communication, it's important to have a set of rules to ensure that the communication is consistent and clear.
+
+For example, in traffic, we have traffic signals and signs to help drivers understand how to navigate the roads safely and efficiently.
+
+Similarly, when transferring data over a network, it's essential to have protocols in place to ensure that the data is sent and received correctly.
+
+> Protocols are essentially a set of rules that dictate how computers should communicate with each other over a network.
+
+Some common protocols are - HTTP(Hypertext Transfer Protocol) for web browsing, SMTP(Simple Mail Transfer Protocol) for sending emails, and FTP(File Transfer Protocol) for file transfers. By following these protocols, computers can communicate effectively and efficiently over a network and data transfer becomes consistent.
+
+## How data is transferred?
+
+### Need of address in communication
+
+In normal life sharing some information or resource what we require? Address and details of the Receiver so that the information reaches to the correct destination.  
+  
+In the same way, in computer networks, the client (a device that requests some data) needs the address of the server as well as the server needs the address of the client for sending the response to the request.
+
+### Addressing - IP Address
+
+For handling this problem, a unique numerical identifier is assigned to every device connected to the internet, which is known as an **IP Address** (example- 192.168.1.1 ). It is like a phone number but instead of connecting you to a person, it connects your device to the internet.
+
+### Getting the IP Address of a domain: DNS
+
+Now the client and server both have some IP Address and that can be used for communication but the problem that comes here is we can't remember the IP Addresses of all the websites. So, we need a storage system that stores the IP Addresses of the domains using a key-value pair ( where the key is the URL of the website (also known as a domain name) and the value is the IP Address), this system is known as **DNS ( Domain Name System)**.
+
+### Working
+
+When you type a website address into your web browser, your computer sends a request to a DNS server to find out the IP address associated with that domain name. The DNS server looks up the IP address associated with the domain name and sends it back to your computer. Your computer then uses that IP address to connect to the website's server and request the data you want to see.
+
+Now, the server receives the request and processes the request, and sends back the response to the IP Address of the client.
+
+> But there is a problem in it because server sends the data to the IP Address of client but IP Address is the address of the device, then how to determine which application of that device ( chrome, gmail, playstore...etc) has requested that data?
+> 
+> Then the concept of **PORT** numbers arises.
+
+### PORT Numbers
+
+When a server sends data to a client's IP address, it doesn't know which specific application on the client device made the request. This is where the concept of port numbers comes into play.
+
+Every application that uses the internet to communicate has a unique identifier called a port number associated with it. Think of it like a virtual "door" on the device that allows data to go in and out of that specific application.
+
+So, when a client device sends a request for data to a server, it includes the IP address of the device as well as the port number associated with the application that made the request. The server then sends the data back to the IP address and port number combination from which the request originated, allowing the correct application on the client device to receive and process the data.
+
+For example, when you access a website using your web browser, your computer sends a request to the server's IP address and includes the port number associated with your web browser. The server then sends the requested web page data back to your computer's IP address and the specific port number associated with your web browser application, allowing the web page to be displayed on your screen.
+
+## Conclusion
+
+* In this blog, we have covered the introduction and evolution of a computer network from ARPANET to the Internet.
+    
+* Then we learned the Client-Server architecture of computer networks, how the client requests data and server responds to the requests.
+    
+* We learned what are protocols and the need for protocols for communication in the computer network.
+    
+* Finally, we understood, how data is transferred over the network using IP Addresses and Port Numbers and how the DNS system helps in getting the IP Address of the domains.
+    
+
+That's all for this blog, we will cover each topic in detail in upcoming blogs.
+
+Thank you for reading!

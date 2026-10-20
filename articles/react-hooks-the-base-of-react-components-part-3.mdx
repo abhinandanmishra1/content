@@ -1,0 +1,299 @@
+---
+title: "React Hooks: The Base of React Components  [Part - 3]"
+brief: "This article explains useCallback, useMemo, useRef and useLayoutEffect hooks in detail."
+publishedAt: "2023-02-11T09:36:58.506Z"
+category: "React & Frontend"
+tags:
+  - "React & Frontend"
+  - "React"
+  - "Hooks"
+series:
+  name: "React Hands-On"
+  slug: "react-hands-on-series"
+coverImage:
+  url: "/content/articles/images/react-hooks-the-base-of-react-components-part-3/cover.webp"
+---
+### What we have learned till now?
+
+* We have learned what react hooks are and how it is very useful.
+    
+* We have learned the use and implementation of `useState`, `useEffect` , `useContext` and `useReducer` hooks.
+    
+* Previous Blog - [<mark>Read Here</mark>](https://abhinandanmishra1.hashnode.dev/react-hooks-the-base-of-react-components-part-2)
+    
+
+### useCallback Hook
+
+`useCallback` is a React Hook that lets you cache a function definition between re-renders.
+
+> I repeat it caches **function definition**.
+> 
+> Why there is a need to cache the function?
+> 
+> In the context of React and JavaScript, the same function definition can refer to different instances of the function, which are not equal to each other.
+> 
+> \-&gt; This is because, in JavaScript, functions are treated as **first-class citizens**, and they can be assigned to variables, passed as arguments to other functions, or returned as values from functions.
+> 
+> ```javascript
+> function add(a, b) {
+>   return a + b;
+> }
+> 
+> const add1 = add;
+> const add2 = add;
+> const add3 = function(a, b) {
+>   return a + b;
+> };
+> 
+> console.log(add1 === add2); // true
+> console.log(add1 === add3); // false
+> ```
+> 
+> In this example, `add1` and `add2` are both references to the same `add` function definition but `add3` is a new function definition, even though it has the same code as `add1`.
+
+**Syntax of caching a function** `fn` **using useCallback**
+
+```javascript
+const cachedFn = useCallback(fn, dependencies)
+```
+
+#### How useCallback optimizes the application?
+
+Let's understand it with an example:
+
+```javascript
+import React, { useState, useCallback } from "react";
+
+const TodoItems = React.memo(
+  ({ todoItems }) => {
+    return (
+      <ul>
+        {todoItems.map((item, index) => (
+          <li key={index}>{item}</li>
+        ))}
+      </ul>
+    );
+  },
+  (prevProps, nextProps) => {
+    return prevProps.todoItems === nextProps.todoItems;
+  }
+);
+
+const CahchedComponent = React.memo(({ cachedFunction }) => {
+  console.log("CachedComponent rendered!");
+
+  return <button onClick={cachedFunction}>CachedButton</button>;
+});
+
+const NonCahchedComponent = React.memo(({ nonCachedFunction }) => {
+  console.log("NonCachedComponent rendered!");
+
+  return <button onClick={nonCachedFunction}>NonCachedButton</button>;
+});
+
+function TodoList() {
+  const [todoItems, setTodoItems] = useState([]);
+  const [inputValue, setInputValue] = useState("");
+
+  const updateInputValue = useCallback((e) => {
+    setInputValue(e.target.value);
+  }, []);
+
+  const addTodoItem = () => {
+    const updatedTodoItems = [...todoItems, inputValue];
+    setTodoItems(updatedTodoItems);
+    setInputValue("");
+  };
+
+  const nonCachedFunction = () => {
+    console.log("Printing todoItems in non-cached function", todoItems);
+  };
+
+  const cachedFunction = useCallback(() => {
+    console.log("Printing todoItems in cached function", todoItems);
+  }, [todoItems]);
+
+  return (
+    <div>
+      <h1> Todo List </h1>
+      <TodoItems todoItems={todoItems} addTodoItem={addTodoItem} />
+      <input value={inputValue} onChange={updateInputValue} />
+      <button onClick={addTodoItem}> Add Item </button>
+      <div style={{ margin: 10 }}>
+        <CahchedComponent cachedFunction={cachedFunction} />
+        <NonCahchedComponent nonCachedFunction={nonCachedFunction} />
+      </div>
+    </div>
+  );
+}
+
+export default TodoList;
+```
+
+#### Explanation
+
+* `React.memo` is used to optimize the performance of functional components. When a component is memoized, React will only re-render it if its props have changed. This can help avoid unnecessary re-renders and improve performance.
+    
+* The use of `useCallback` in this example is used to cache the `cachedFunction` so that it only gets created once. This is useful because the definition of the `cachedFunction` depends on the `todoItems` state, which doesn't change often. By caching it with `useCallback`, we ensure that the same function instance is used in subsequent renders, avoiding the need to re-create it each time.
+    
+* On the other hand, the nonCachedFunction is not cached with useCallback, so it will be re-created on every render. This leads to a change in its reference and **NonCachedComponent that depends** on it will also re-render. This can cause performance issues if the components are expensive to render.
+    
+* The `addTodoItem` function is not memoized because it changes every time the `todoItems` or `inputValue` state changes. Additionally, there is no component that depends on this function, so there is no need to cache it with useCallback.
+    
+* This means we should use `useCallback` when it's required not all the time because it may cause memory issues also.
+    
+
+### useMemo Hook
+
+`useMemo` is a React Hook that lets you cache the **result of a calculation** between re-renders.
+
+It is similar to `useCallback` but instead of caching the `function definition` it caches `result of the function` and the rest of the things are same as `useCallback`.
+
+**Syntax of writing a** `useMemo` **Hook**
+
+```javascript
+const cachedValue = useMemo(calculateValue, dependencies)
+```
+
+Let's understand **useMemo** using an example:
+
+```javascript
+import React, { useState, useMemo } from "react";
+
+const slowFunction = (num, multiplier) => {
+  console.log("Calling Slow Function with multiplier", multiplier);
+  for (let i = 0; i < 1000000000; i++) {}
+  return num * multiplier;
+};
+
+export default function App() {
+  const [number, setNumber] = useState(0);
+  const [dark, setDark] = useState(false);
+  const doubleNumber = useMemo(() => slowFunction(number, 2), [number]);
+  const trippleNumber = slowFunction(number, 3);
+
+  const themeStyles1 = {
+    backgroundColor: dark ? "blue" : "white",
+    color: dark ? "white" : "blue"
+  };
+
+  const themeStyles2 = {
+    backgroundColor: dark ? "black" : "white",
+    color: dark ? "white" : "black"
+  };
+
+  return (
+    <div>
+      <input
+        type="number"
+        value={number}
+        onChange={(e) => setNumber(parseInt(e.target.value))}
+      />
+      <button onClick={() => setDark((prevDark) => !prevDark)}>
+        Change Theme
+      </button>
+      <div style={themeStyles1}>Cached Double - {doubleNumber} </div>
+      <div style={themeStyles2}>Non cached tripple - {trippleNumber} </div>
+    </div>
+  );
+}
+```
+
+**Output**
+
+![Illustration 1](/content/articles/images/react-hooks-the-base-of-react-components-part-3/inline-image-1.png)
+
+#### Explanation
+
+* In this example, we have two numbers, **doubleNumber** and **trippleNumber**, that are calculated using the `slowFunction`. The `slowFunction` takes some time to complete its calculation because it has an empty loop in it.
+    
+* The difference between **doubleNumber** and **trippleNumber** is that **doubleNumber** is calculated using the `useMemo` hook, which helps us optimize performance. The `useMemo` hook remembers the result of the calculation and re-uses it when the component re-renders, instead of re-calculating the result.
+    
+* On the other hand, **trippleNumber** is not memoized, which means that every time the component re-renders, a new calculation is performed, leading to slower performance.
+    
+* When the <mark>Change Theme</mark> button is clicked and the component re-renders, the **doubleNumber** remains the same, while the **trippleNumber** is recalculated, resulting in slower performance.
+    
+* In simple terms, the `useMemo` hook helps us cache the results of expensive calculations, so we don't have to recalculate them every time the component re-renders. This helps us optimize the performance of our React applications.
+    
+
+### useRef Hook
+
+The `useRef` hook is a way to access the value of a DOM element or a component instance in React. It is used to maintain a reference to a value across renders.
+
+Unlike state, which is updated and causes a re-render when its value changes, the value stored in a ref does not cause a re-render. Instead, it remains unchanged across renders, making it ideal for storing values that should persist across renders, such as the value of a text input or a reference to a DOM element.
+
+Here's an example of how to use the `useRef` hook:
+
+```javascript
+import React, { useRef } from 'react';
+
+function Input() {
+  const inputRef = useRef(null);
+
+  const handleClick = () => {
+    inputRef.current.focus();
+  };
+
+  return (
+    <div>
+      <input type="text" ref={inputRef} />
+      <button onClick={handleClick}>Focus Input</button>
+    </div>
+  );
+}
+```
+
+In this example, `inputRef` is a reference to the text input DOM element. We set the `ref` attribute of the input element to `inputRef`, which allows us to access the input element in the `handleClick` function. When the button is clicked, `handleClick` is called and the `focus` method is invoked on the input element, causing it to receive focus.
+
+In conclusion, the `useRef` hook is a way to access values that persist across renders in React, and is particularly useful for accessing DOM elements or component instances.
+
+### useLayoutEffect
+
+`useLayoutEffect` is a React hook that is used for running side effects after rendering. The difference between `useLayoutEffect` and `useEffect` is that the former runs before the browser paints changes to the screen, while the latter runs after the paint.
+
+This can be useful when you need to make sure that some DOM changes have taken place before running your side effect. For example, if you need to measure the height of a DOM element, you would use `useLayoutEffect` to ensure that the height is calculated accurately.
+
+Here's a simple example to demonstrate the use of `useLayoutEffect`:
+
+```javascript
+import React, { useState, useLayoutEffect } from "react";
+
+function MyComponent() {
+  const [width, setWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    setWidth(window.innerWidth);
+  }, []);
+
+  return <div>Window width: {width}</div>;
+}
+```
+
+#### Explanation
+
+* In this example, we use `useLayoutEffect` to set the width state to the value of the window's inner width. The effect will only run once on mount, as specified by the second argument `[]`. The result of the effect is that the width state is updated immediately after the component has been mounted, allowing us to display the window width.
+    
+
+### Conclusion
+
+* React hooks allow developers to add state and other features to functional components, making them more versatile and maintainable.
+    
+* Hooks simplify the code by breaking it into smaller, reusable chunks, leading to improved readability.
+    
+* We learned about React hooks like `useState`, `useEffect`,`useContext`,`useReducer`, `useCallback`, `useMemo` and `useLayoutEffect`.
+    
+* We can create our custom hooks to make the code more readable and maintainable that we will learn in the upcoming blogs.
+    
+
+Hope you learned things in better way and if you have any doubts, please ask me in the comment section.
+
+> **More from the blog**
+> 
+> * Try to use the codes of the blog in your local IDE and then check how things are working, that will make things more clear to you.
+>     
+> * First, read the code, then read the explanation and after that reading the code again will make you understand things more easily.
+>     
+
+If you find the blog useful, upvote the blog and share with your friends.
+
+Keep Learning! bye.

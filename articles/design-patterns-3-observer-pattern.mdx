@@ -1,0 +1,171 @@
+---
+title: "Design Patterns #3: Observer Pattern"
+brief: "This is probably the first pattern you'll encounter in real-world systems without realizing it. Before learning the observer pattern, let's first…"
+publishedAt: "2026-06-12T14:33:24.022Z"
+category: "Low Level Design"
+tags:
+  - "Low Level Design"
+  - "Design Patterns"
+  - "Architecture"
+series:
+  name: "Low Level Design"
+  slug: "low-level-design"
+coverImage:
+  url: "/content/articles/images/design-patterns-3-observer-pattern/cover.png"
+---
+This is probably the first pattern you'll encounter in real-world systems without realizing it.
+
+Before learning the observer pattern, let's first understand the problem.
+
+Let's understand with the example of e-commerce application. When an order is placed, multiple things need to happen.
+
+```plaintext
+Order Placed
+     |
+     +---- Send Email
+     |
+     +---- Send SMS
+     |
+     +---- Update Analytics
+     |
+     +---- Notify Warehouse
+```
+
+A beginner solution would be:
+
+```java
+class OrderService {
+
+    void placeOrder() {
+
+        // Order logic
+
+        emailService.sendEmail();
+
+        smsService.sendSMS();
+
+        analyticsService.track();
+
+        warehouseService.notify();
+    }
+}
+```
+
+Now imagine tomorrow the business asks for:
+
+```plaintext
+Order Placed
+     |
+     +---- Send Email
+     |
+     +---- Send SMS
+     |
+     +---- Update Analytics
+     |
+     +---- Notify Warehouse
+     |
+     +---- Send Push Notification
+     |
+     +---- Update CRM
+     |
+     +---- Trigger Recommendation Engine
+```
+
+With our current implementation, every new requirement forces us to modify `OrderService`.
+
+Over time, `OrderService` becomes a giant class that knows about every service in the system.
+
+This violates Open Closed Principle because we keep modifying existing code whenever a new behavior is introduced.
+
+Ideally, `OrderService` should only be responsible for placing an order and should not care who is interested in the order creation event.
+
+This is exactly the problem Observer Pattern solves.
+
+## What is observer pattern?
+
+Observer Pattern allows multiple objects to subscribe to an event and automatically get notified whenever that event occurs.
+
+Think:
+
+A YouTube channel has multiple subscribers and whenever a new video is uploaded, all subscribers automatically receive notifications.
+
+Here, the YouTube Channel acts as the **publisher (or subject)** and the subscribers act as the **observers**.
+
+When a new video is uploaded, the channel publishes an event and notifies all subscribed observers so that they can perform their respective actions.
+
+## Solution for Ecommerce Problem
+
+### Create an Observer Interface
+
+```java
+interface OrderObserver {
+
+    void update(Order order);
+}
+```
+
+### Create needed observers
+
+```java
+class EmailNotificationObserver implements OrderObserver {
+
+    public void update(Order order) {
+        System.out.println("Sending Email");
+    }
+}
+```
+
+```java
+class WarehouseObserver implements OrderObserver {
+
+    public void update(Order order) {
+        System.out.println("Notifying Warehouse");
+    }
+}
+```
+
+### Create subject
+
+This is the subject (publisher) that maintains a list of observers and notifies them whenever an event occurs.
+
+```java
+class OrderService {
+
+    private List<OrderObserver> observers = new ArrayList<>();
+
+    void addObserver( OrderObserver observer) {
+        observers.add(observer);
+    }
+
+    void notifyObservers( Order order ) {
+        for(OrderObserver observer: observers) {
+            observer.update(order);
+        }
+    }
+
+    void placeOrder(Order order) {
+
+        // Order creation logic
+
+        notifyObservers(order);
+    }
+}
+```
+
+### Usage
+
+```java
+OrderService orderService = new OrderService();
+
+orderService.addObserver(new EmailNotificationObserver());
+
+orderService.addObserver(new SMSNotificationObserver());
+
+orderService.addObserver(new WarehouseObserver());
+
+orderService.placeOrder(order);
+```
+
+This is how observer pattern solves the problem.
+
+You might be thinking where will we register these all observers. For our code here we can register in the main function or in Order Controller but in real applications, observers are usually registered during application startup or through a dependency injection framework. We are registering them manually here to understand the Observer Pattern.

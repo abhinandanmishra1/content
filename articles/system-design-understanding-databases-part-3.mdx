@@ -1,0 +1,218 @@
+---
+title: "System Design - Understanding Databases - Part 3"
+brief: "Scaling Databases: Mastering Vertical and Horizontal Techniques for Growth"
+publishedAt: "2025-01-03T06:08:08.647Z"
+category: "System Design"
+tags:
+  - "System Design"
+  - "Databases"
+  - "PostgreSQL"
+  - "MySQL"
+series:
+  name: "System Design"
+  slug: "system-design"
+coverImage:
+  url: "/content/articles/images/system-design-understanding-databases-part-3/cover.png"
+---
+## Need for Scaling Databases
+
+We have understood the importance of databases and how their various properties simplify life and make systems highly dependent on them. However, databases have fixed storage capacity, and as data grows, we need to increase this capacity through a process known as **scaling**.
+
+In today's digital age, data growth is exponential. From social media posts to e-commerce transactions, systems generate massive amounts of data every second.
+
+Traditional single-server databases eventually hit their limits in terms of:
+
+* **Storage capacity**
+    
+* **CPU processing power**
+    
+* **Memory (RAM) constraints**
+    
+* **I/O operations per second (IOPS)**
+    
+* **Network bandwidth**
+    
+
+---
+
+## Database Scaling Techniques
+
+There are two primary types of scaling:
+
+1. **Vertical Scaling**
+    
+2. **Horizontal Scaling**
+    
+
+---
+
+### Vertical Scaling
+
+Vertical scaling, or "scaling up," involves adding more CPU, RAM, and disk space to the database. This typically requires downtime during a server reboot.
+
+#### **Example - Facebook's Vertical Scaling**
+
+When Mark Zuckerberg first launched Facebook from his Harvard dorm room in 2004, the site served a single college campus. As more students joined, the initial setup—a single server running on basic hardware—quickly proved insufficient. During Facebook's early days, Zuckerberg and his team increased capacity by upgrading their servers with:
+
+* More powerful processors
+    
+* Additional RAM
+    
+* Larger storage capacity
+    
+* Faster network cards
+    
+
+**Benefits:**
+
+1. Easy to implement.
+    
+2. Increases the ability to handle more requests.
+    
+3. No code changes are required since there is no distributed system complexity.
+    
+
+**Limitations:**
+
+1. Limited by physical hardware constraints.
+    
+2. Downtime during scaling.
+    
+3. Costs increase exponentially.
+    
+4. A single point of failure remains.
+    
+
+---
+
+### Horizontal Scaling
+
+Horizontal scaling, or "scaling out," involves adding more servers to distribute the database load. This can be achieved through two main strategies: **Replication** and **Sharding**.
+
+#### **Example - Facebook's Horizontal Scaling**
+
+From 2008 to 2010, Facebook faced rapid user growth, reaching 500 million users. The limitations of vertical scaling became apparent as expanding the hardware was no longer feasible.
+
+Facebook adopted horizontal scaling to overcome these challenges. Its approach to horizontal scaling involved:
+
+1. Instead of splitting database functions (like accounts and profiles) into separate databases - which would only double capacity - they wrote code to handle cases where users weren't on the same database.
+    
+2. This approach, though more complex initially, allowed better scalability by distributing users across many machines rather than just two.
+    
+
+> [Read this facebook’s article here.](https://engineering.fb.com/2010/07/21/core-infra/scaling-facebook-to-500-million-users-and-beyond/)
+
+---
+
+#### Read Replicas
+
+In many systems, the ratio of read-to-write operations is approximately 90:10. To handle this, more databases (replicas) are added for read operations, allowing the master database to focus exclusively on write operations. Business logic determines which database handles a particular request.
+
+**Benefits:**
+
+1. Improved read performance.
+    
+2. High availability.
+    
+3. Disaster recovery.
+    
+4. Geographic distribution.
+    
+
+##### Replication Process:
+
+The master and replica databases must contain the same data, and write operations are performed only on the master. <mark>The process of synchronizing data from the master to replicas is called </mark> **<mark>replication</mark>**<mark>.</mark>
+
+* **Synchronous Replication:**  
+    The client receives a success/failure response only after the master and all replicas are updated.
+    
+    **Advantages:**
+    
+    * Strong consistency.
+        
+    * Zero replication lag.
+        
+    
+    **Disadvantages:**
+    
+    * Latency in update requests.
+        
+    * Reduced availability if replicas are down.
+        
+* **Asynchronous Replication:**  
+    The client receives a success/failure response when the master is updated, and replicas are updated asynchronously.
+    
+    **Advantages:**
+    
+    * Faster write operations with low latency.
+        
+    * Better performance.
+        
+    
+    **Disadvantages:**
+    
+    * Possible data inconsistency.
+        
+    * Risk of data loss if the primary fails.
+        
+
+---
+
+#### Sharding
+
+Sharding involves splitting your database into multiple parts (**shards**) and distributing them across different servers. Each shard contains a subset of the total data.
+
+##### Partitioning:
+
+Partitioning is the process of logically splitting data in a database. For example, you can create separate databases for **Authentication** and **Posts** services on the same server or different servers. (Sharding is the horizontally partitioned data stored on different servers.)
+
+**Common Sharding Strategies:**
+
+1. **Range-based sharding:**  
+    Splitting data based on a range of values.
+    
+    ```plaintext
+    1. Users with IDs 1-1M on Shard 1
+    2. Users with IDs 1M-2M on Shard 2
+    ```
+    
+2. **Hash-based sharding:**  
+    Distributing data using a hash function.
+    
+    ```sql
+    -- User ID % number_of_shards determines the shard
+    shard_number = user_id % 4  -- For 4 shards
+    ```
+    
+3. **Geographic sharding:**  
+    Splitting data based on geographic regions.
+    
+    ```sql
+    -- European users on EU shards
+    -- Asian users on APAC shards
+    ```
+    
+
+**Benefits:**
+
+1. Improved write performance.
+    
+2. Better scalability.
+    
+3. Reduced query time.
+    
+
+**Challenges:**
+
+1. Complex application logic.
+    
+2. Cross-shard queries (avoiding them is preferred for better performance).
+    
+3. Rebalancing data.
+    
+4. Managing distributed transactions.
+    
+
+---
+
+That's all about scaling databases and how horizontal and vertical scaling can improve the scaling process.

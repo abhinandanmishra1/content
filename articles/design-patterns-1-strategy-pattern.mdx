@@ -1,0 +1,161 @@
+---
+title: "Design Patterns #1: Strategy Pattern"
+brief: "Replacing If-Else with better design"
+publishedAt: "2026-06-12T14:31:58.661Z"
+category: "Low Level Design"
+tags:
+  - "Low Level Design"
+  - "Design Patterns"
+  - "Architecture"
+series:
+  name: "Low Level Design"
+  slug: "low-level-design"
+coverImage:
+  url: "/content/articles/images/design-patterns-1-strategy-pattern/cover.png"
+---
+Before starting learning strategy pattern, let's first understand the problem that this pattern solves.
+
+Suppose we are building an e-commerce application, where users can pay using multiple methods:
+
+1.  Credit Card
+    
+2.  UPI
+    
+3.  Net banking
+    
+
+A straightforward implementation would look like this:
+
+```java
+class PaymentService {
+    void processPayment(String paymentType, double amount) {
+        if(paymentType.equals("CARD")) {
+            System.out.println("Processing Card Payment");
+        }
+        else if(paymentType.equals("UPI")) {
+            System.out.println("Processing UPI Payment");
+        }
+        else if(paymentType.equals("NET_BANKING")) {
+            System.out.println("Processing Net Banking Payment");
+        }
+    }
+}
+```
+
+This code looks completely fine initially but as soon as a new payment way is introduced we will have to update the processPayment functionality directly and that can introduce new bugs in the existing system.
+
+This design violates:
+
+*   Open Closed Principle
+    
+*   Hard to maintain and extend the functionalities
+    
+
+Now, we know the problem and Stragey Pattern solves this problem.
+
+## What is Strategy Pattern?
+
+Strategy Pattern allows us to define multiple algorithms or behaviors separately and choose one of them at runtime.
+
+In simple words:
+
+> We define different classes for different behaviours and choose it at runtime instead of defining multiple if-else conditions.
+
+### Solution
+
+First we need to create an abstraction.
+
+```java
+interface PaymentStrategy {
+    void pay(double amount);
+}
+```
+
+Now we can create different implementation for each type of methods.
+
+### Card Payment
+
+```java
+class CardPaymentStrategy implements PaymentStrategy {
+    public void pay(double amount) {
+        System.out.printf("Paid %d using Card", amount);
+    }
+}
+```
+
+### UPI Payment
+
+```java
+class UpiPaymentStrategy implements PaymentStrategy {
+    public void pay(double amount) {
+        System.out.printf("Paid %d using UPI", amount);
+    }
+}
+```
+
+### Netbanking Payment
+
+```java
+class NetBankingPaymentStrategy implements PaymentStrategy {
+    public void pay(double amount) {
+        System.out.printf("Paid %d using Netbanking", amount);
+    }
+}
+```
+
+### Payment Service class
+
+```java
+class PaymentService {
+    private PaymentStrategy paymentStrategy;
+
+    PaymentService(PaymentStrategy paymentStrategy) {
+        this.paymentStrategy = paymentStrategy;
+    }
+
+    void processPayment(double amount) {
+        paymentStrategy.pay(amount);
+    }
+}
+```
+
+### Usage
+
+```java
+// Using card for payment
+PaymentService cardPaymentService = new PaymentService(new CardPaymentStrategy());
+
+cardPaymentService.processPayment(1000);
+
+
+// Using Upi for payment
+PaymentService upiPaymentService = new PaymentService(new UpiPaymentStrategy());
+
+upiPaymentService.processPayment(1000);
+
+// same goes for other methods
+```
+
+As you can see it's decided at runtime, what method to be used for the payment and then picks the correct strategy to process the payment.
+
+This is known as Strategy Pattern because it picks different strategy for different cases and if a new case is introduced just introducing a new stratgey would solve this wothout violating OCP.
+
+This pattern uses OCP and DIP and also composition is used instead of inheritcan and Program to Intefaces instead of concrete classes.
+
+## Golden Rule
+
+Whenever you see code like:
+
+```java
+if(type.equals(...))
+else if(type.equals(...))
+else if(type.equals(...))
+```
+
+and new conditions keep getting added over time,
+
+ask yourself:
+
+> Can each branch become its own class?
+
+If yes, Strategy Pattern is often a good candidate.

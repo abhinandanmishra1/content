@@ -1,0 +1,227 @@
+---
+title: "System Design - Approaching a system design problem"
+brief: "In this article, we will learn about the steps to approach a system design problem, and how to understand if the system is designed well or not."
+publishedAt: "2024-12-19T07:21:52.453Z"
+category: "System Design"
+tags:
+  - "System Design"
+series:
+  name: "System Design"
+  slug: "system-design"
+coverImage:
+  url: "/content/articles/images/system-design-approaching-a-system-design-problem/cover.png"
+---
+In this article, we will learn about the steps to approach a system design problem, and how to understand if the system is designed well or not.
+
+## How to approach a system design problem?
+
+Let’s understand the approach to system design by building a **social media platform** (e.g., a simplified version of Facebook).
+
+### 1\. **Take Baby Steps**
+
+Start with solving the problem for a small number of users, focusing on core functionality.  
+Begin by designing a social media platform for a small college community where:
+
+* Users can sign up and log in.
+    
+* They can post updates.
+    
+* Friends can view these updates in a simple chronological feed.
+    
+
+Once this works efficiently, scale it for a larger audience by adding features like ***notifications*** and ***recommendations***.
+
+### 2\. **Understand the Problem Statement Thoroughly**
+
+Before jumping into design, analyze the problem:
+
+* Who are the users?  
+    College students looking to connect with friends.
+    
+* What are the key use cases?
+    
+    * Users create profiles.
+        
+    * Users post updates.
+        
+    * Friends view and interact with posts (like, comment).
+        
+
+> **Clarity ensures you don’t miss requirements during implementation.**
+
+### 3\. **Break It Down into Components**
+
+Divide the main problem into independent, manageable parts. For social media platforms, the primary components could be:
+
+* **Authentication Service:** Handles user sign-up, login, and profile management.
+    
+* **Post Service:** Allows users to create, store, and retrieve posts.
+    
+* **Feed Service:** Aggregates and displays posts from friends.
+    
+* **Friendship Service:** Manages friend requests and connections.
+    
+
+> Breaking down ensures each component can be developed, tested, and scaled independently.
+
+### 4\. **Solve Each Component Separately**
+
+> This is a brief explanation of how each sub-problem can be solved individually to illustrate the process of designing the system.
+
+Let’s take each component and solve it step-by-step, breaking them into subcomponents if needed
+
+1. #### **Authentication Service:**
+    
+
+* Subcomponents:
+    
+    * **User Database:** Stores user profiles and credentials securely.
+        
+    * **Session Management:** Manages user sessions with tokens.
+        
+* Challenges:
+    
+    * Securely hashing passwords using algorithms like SHA-256.
+        
+    * Preventing brute force attacks with [rate-limiting](https://www.cloudflare.com/learning/bots/what-is-rate-limiting/).
+        
+
+2. #### **Post Service:**
+    
+
+* Subcomponents:
+    
+    * **Post Storage:** Save posts in a database.
+        
+    * **Media Handling:** Support image or video uploads with a [CDN (Content Delivery Network)](https://www.cloudflare.com/learning/cdn/what-is-a-cdn/) for optimized performance.
+        
+* Challenge: Efficiently retrieving posts for a user while ensuring fast performance.
+    
+
+3. #### **Feed Service:**
+    
+
+* Subcomponents:
+    
+    * **Feed Generator:** Fetches posts from a user’s friends and ranks them (chronologically for now).
+        
+    * **Caching Layer:** Stores frequently viewed feeds to improve response times.
+        
+* Challenge: When scaling, use [asynchronous processing](https://www.tryexponent.com/courses/system-design-interviews/asynchronous-processing) to generate feeds in bulk.
+    
+
+4. #### **Friendship Service:**
+    
+
+* Subcomponents:
+    
+    * **Friendship Graph:** Use a graph database or adjacency lists to model relationships.
+        
+    * **Recommendation Engine:** Suggest friends based on mutual connections.
+        
+
+### 5\. **Evaluate Each Component/Subcomponent for Key Aspects**
+
+For each component, consider these critical aspects:
+
+1. #### **Database and Caching:**
+    
+
+* **Authentication:** Use a relational database like PostgreSQL for user profiles and add a Redis cache for token validation.
+    
+* **Post Service:** Store posts in a NoSQL database like MongoDB, with caching for the most recent posts.
+    
+
+2. #### **Scaling and Fault Tolerance:**
+    
+
+* **Feed Service:** Scale horizontally with multiple servers and implement database replication to prevent downtime.
+    
+* **Post Service:** Use a [message queue](https://www.ibm.com/topics/message-queues) for handling a high volume of media uploads asynchronously.
+    
+
+3. #### **Asynchronous Processing:**
+    
+
+* Feed updates can be processed in the background using worker queues.
+    
+* For instance, when a user posts an update, a message queue triggers a background task to refresh their friends’ feeds.
+    
+
+4. #### **Communication methods:**
+    
+
+* Use REST APIs for synchronous communication between services.
+    
+* Example: The **Friendship Service** API retrieves a user’s connections, which is used by the **Feed Service** to generate personalized content.
+    
+
+### 6\. **Iterate and Add More Components as Needed**
+
+As the system evolves, review requirements to add missing features or enhance existing ones. Ensure every new addition is checked for:
+
+Check all new additions for:
+
+* Database and caching needs
+    
+* Scalability and fault tolerance
+    
+* Asynchronous processing
+    
+* Communication methods
+    
+
+---
+
+## How do we know if a system is designed well or not?
+
+A well-designed system is modular, efficient, and adaptable. ***While no system is perfect and there’s always room for improvement***, here are key indicators to evaluate the design:
+
+We will check whether the social media platform that we designed, is designed well or not.
+
+### 1\. **Components Are Isolated and Modular**
+
+The system is broken into independent components, each addressing a specific problem.  
+**In our case, the social media platform is divided into the following components:**
+
+* **Authentication Service:** Manages user signup and login.
+    
+* **Notification Service:** Determines and sends notifications efficiently.
+    
+* **Feed Service:** Delivers posts to users based on relevance or time.
+    
+
+### 2\. **Clear Responsibilities for Each Component**
+
+Each component has a defined role, with no overlap in responsibilities.  
+**Responsibilities of each component:**
+
+* **Authentication:** Handles user identity securely.
+    
+* **Notification:** Decides when and how notifications are sent.
+    
+* **Feed:** Aggregates and displays posts for the user.
+    
+
+### 3\. **Technical Aspects Are Thoroughly Considered**
+
+For each component, the design ensures:
+
+* **Database and Caching:** Optimized storage and retrieval of frequently accessed data.
+    
+* **Scaling and Fault Tolerance:** Supports increased load and avoids downtime.
+    
+* **Asynchronous Processing:** Efficiently handles tasks like background feed updates or notification dispatch.
+    
+* **Communication:** Components interact seamlessly through APIs, queues, or protocols.
+    
+
+### 4\. **Scalability, Fault Tolerance, and High Availability**
+
+Each component is designed to operate independently, ensuring scalability, reliability, and availability even under high loads or partial system failures.  
+**In social media platform case:**  
+The **Feed Service** uses a caching layer to handle high request rates, while the **Notification Service** employs message queues for asynchronous notification processing.
+
+---
+
+The social media platform we designed isn’t a perfect solution, as it’s meant for explanation purposes only. However, it follows all the key aspects of a well-designed system, so it can be considered a well-designed system that can be scaled further. [System Design of Social Media Platform](https://blog.calcont.in/2023/06/social-media-application-system-design.html)s.

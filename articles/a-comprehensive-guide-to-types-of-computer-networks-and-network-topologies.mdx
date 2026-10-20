@@ -1,0 +1,166 @@
+---
+title: "A Comprehensive Guide to Types of computer networks and network topologies"
+brief: "This article covers types of computer networks based on the geographical scale and explains the network nodes and network topologies"
+publishedAt: "2023-06-10T13:04:20.092Z"
+category: "Computer Networks"
+tags:
+  - "Computer Networks"
+  - "Networking"
+  - "TCP/IP"
+series:
+  name: "Computer Networks"
+  slug: "computer-network"
+coverImage:
+  url: "/content/articles/images/a-comprehensive-guide-to-types-of-computer-networks-and-network-topologies/cover.avif"
+---
+## Overview
+
+Computer Networking has become an integral part of our lives. It is used to connect computers and devices across the globe, enabling us to share information and communicate with each other. From sending a simple email to video conferencing or managing a device by sitting in different parts of the world, all of this is done using computer networks.  
+This comprehensive guide covers types of computer networks based on the geographical scale and explains the network nodes and network topologies in detail.
+
+## Type of Computer Networks
+
+Based on the geographical scale or physical extent computer networks are classified into the following categories.
+
+1. Nanoscale network
+    
+2. Personal area network
+    
+3. Local area network
+    
+4. Home area network
+    
+5. Storage area network
+    
+6. Campus area network
+    
+7. Backbone network
+    
+8. Metropolitan area network
+    
+9. Wide area network
+    
+10. Enterprise private network
+    
+11. Virtual private network
+    
+12. Global area network
+    
+
+You can read more about all of these network types on [Wikipedia](https://en.wikipedia.org/wiki/Computer_network#Geographic_scale) but we will be discussing more LAN, MAN, and WAN in this blog.
+
+#### LAN ( Local Area Network )
+
+A local area network (LAN) is a network of computers and other devices that are connected in a limited geographical area such as a home, office, or school. An example of a LAN is the computers in a classroom that are connected to the same network and can share files and printers.
+
+#### MAN ( Metropolitan Area Network )
+
+A metropolitan area network (MAN) is a network that covers a larger area than a LAN but is smaller than a WAN. MANs are typically used by organizations, government agencies, or universities to connect their offices and campuses.
+
+#### WAN (Wide Area Network)
+
+A wide area network is a type of computer network that connects devices over long distances, like connecting computers in different cities, countries, or even continents.
+
+A WAN uses a communications channel that combines many types of media such as telephone lines, cables, and airwaves. A WAN often makes use of transmission facilities provided by [common carriers](https://en.wikipedia.org/wiki/Common_carrier), such as telephone companies.
+
+The Internet is an example of a wide area network.
+
+## Network Topology
+
+Network topology refers to the physical and logical arrangement of the nodes and the node links (connections between nodes ) in the network.
+
+### Physical Topology
+
+This refers to how the cables or connection links are laid out to connect many computers to one network.
+
+There are seven basic physical topologies:
+
+* Point-to-point topology
+    
+* Bus (point) topology
+    
+* Star topology
+    
+* Ring topology
+    
+* Tree topology
+    
+* Full/partial Mesh topology
+    
+* Hybrid topology
+    
+
+![](/content/articles/images/a-comprehensive-guide-to-types-of-computer-networks-and-network-topologies/network-topologies.svg)
+
+#### Point-to-Point topology
+
+Point-to-point topology, also known as a point-to-point connection or link, is a network configuration where two devices are directly connected, forming a communication link between them.
+
+In this type of topology, two devices are connected directly using a connecting wire or a dedicated connection between these two devices only.
+
+#### Bus (point) topology
+
+In a bus topology used in local area networks (LANs), all the computers are connected to a single cable, like a long road where all the computers are houses. Each computer is connected to this main cable through a connector, like a driveway connecting a house to the road. At each end of the cable, there is a terminator to stop signals from bouncing back and forth.
+
+When a computer wants to send data, the signal travels in both directions along the cable and reaches all the computers connected to it, just like a message being sent to all the houses on the road. But each computer only pays attention if the data contains their specific address (like a house number). If the address doesn't match, the computer ignores the data, but if it matches, the computer accepts and processes the data.
+
+The bus topology is cheaper to set up because it only requires one cable. It's like building one road for all the houses, which is less expensive. However, managing the network can be more challenging. If the cable breaks at any point, the entire network will be affected, just like if the road gets blocked, all the houses on that road will have trouble getting in or out.
+
+![undefined](/content/articles/images/a-comprehensive-guide-to-types-of-computer-networks-and-network-topologies/bus-network.svg)
+
+#### Star topology
+
+Imagine a group of houses surrounding a central park. Each house has its own path leading to the park. This is like a star topology in a local area network (LAN). In this setup, each computer is like a house, and they connect to a central hub (the park) with separate cables.
+
+Now, imagine people walking from one house to another through the paths in the park. Similarly, network traffic flows between computers through the central hub. The hub ensures that messages from one computer reach all the other computers connected to it.
+
+Setting up and managing a star topology is easy. Just like adding more paths from the park to new houses, you can add more computers to the network by connecting them to the hub with new cables.
+
+However, using a star topology requires more cables compared to other setups. It's like having many paths from the park to each house. If the central hub stops working, the whole network goes down, just like if the park gets blocked, and everyone has trouble moving around.
+
+In a star topology, when one computer wants to send information to another, it has to share that information with all the other computers connected to the hub. It's like shouting out a message in the park, and everyone hears it. So, if the information is meant for just one specific computer, the star topology may not be the most efficient choice.
+
+![undefined](/content/articles/images/a-comprehensive-guide-to-types-of-computer-networks-and-network-topologies/inline-image-1.png)
+
+#### Ring topology
+
+Imagine you and your friends are sitting in a circle, passing around a note. You want to make sure that the note reaches everyone in the circle, so you establish a ring topology.
+
+In this setup, each friend represents a device in the network, and the note symbolizes the data that needs to be transmitted. The note travels around the circle in one direction, passing from one friend to the next. Similarly, in a ring topology, data circularly travels around the network.
+
+To ensure the signal remains strong as it travels around the ring, each friend (device) has a receiver to receive the note and a transmitter to pass it along to the next friend in the circle. This way, each friend acts as a repeater, helping to keep the signal strong and preventing it from weakening as it makes its way around the ring.
+
+In a network with a ring topology, the data transmission relies on the ability of the signal to travel continuously around the ring. It's like the successful passing of the note around the circle. If there is a break or interruption in the ring, the data transmission would be disrupted, just like if the circle got broken and the note couldn't continue its journey.
+
+![undefined](/content/articles/images/a-comprehensive-guide-to-types-of-computer-networks-and-network-topologies/ring-network.svg)
+
+#### Tree topology
+
+A tree topology is a **hierarchical structure** where nodes are organized in levels, resembling the branches of a tree. It differs from other topologies like Star and Bus. This arrangement, also known as hierarchical topology, is commonly employed in corporate networks to organize data in databases and workstations.
+
+![undefined](/content/articles/images/a-comprehensive-guide-to-types-of-computer-networks-and-network-topologies/tree-network.svg)
+
+#### Full/partial Mesh topology
+
+<dl><dd><b>Fully connected mesh topology</b></dd><dd>The number of connections in a full mesh network of n nodes is = n(n - 1) / 2. The fully connected mesh topology is generally too costly and complex for practical networks. It has been used on networks with only a small number of nodes.</dd></dl>
+
+<dl><dd><b>Partially connected mesh topology</b></dd><dd>The type of network topology in which some of the nodes of the network are connected to more than one other node in the network with a point-to-point link – this makes it possible to take advantage of some of the redundancy that is provided by a physical fully connected mesh topology without the expense required for a connection between every node in the network.</dd></dl>
+
+![Fully Connected mesh topology](/content/articles/images/a-comprehensive-guide-to-types-of-computer-networks-and-network-topologies/inline-image-2.png)
+
+**Hybrid topology**
+
+A hybrid topology is a combination of two or more different network topologies. It brings together the characteristics and advantages of multiple topologies to meet specific networking needs. By integrating different topologies, a hybrid topology can provide more flexibility, scalability, and robustness in network design.
+
+## Conclusion
+
+* In this article, we learned about types of computer networks and network topologies.
+    
+* We learned what are LAN, MAN, and WAN.
+    
+* Then we understood the physical network topologies like point-to-point topology, bus topology, star topology, ring topology, and more.
+    
+* In the upcoming articles, we will focus more on the complex concepts of computer networks.
+    
+
+Thanks for reading!

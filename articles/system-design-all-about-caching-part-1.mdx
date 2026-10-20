@@ -1,0 +1,278 @@
+---
+title: "System Design - All about Caching - Part 1"
+brief: "Caching is a process of storing frequently accessed data in temporary storage for faster retrieval of data. You might have faced a website taking a longer…"
+publishedAt: "2025-07-22T02:00:53.783Z"
+category: "System Design"
+tags:
+  - "System Design"
+  - "Caching"
+  - "Redis"
+series:
+  name: "System Design"
+  slug: "system-design"
+coverImage:
+  url: "/content/articles/images/system-design-all-about-caching-part-1/cover.png"
+---
+Caching is a process of storing frequently accessed data in temporary storage for faster retrieval of data. You might have faced a website taking a longer time to load for the first time but on the second time further, it loads faster, this also belongs to the concept of caching.
+
+> ℹ️ Did you know that more than half of mobile users leave websites that take over 3 seconds to load?
+> 
+> Google used a deep neural network with a big dataset of bounce and conversion rates, achieving 90% prediction accuracy. They found that as page load time goes from 1 second to 10 seconds, the chance of a mobile visitor leaving increases by 123%. Here are the bounce rates based on website loading time:
+> 
+> * If a website takes 1 to 3 seconds to load, the bounce chance goes up by 32%.
+>     
+> * If a website takes 1 to 5 seconds to load, the bounce chance goes up by 90%.
+>     
+> * If a website takes 1 to 6 seconds to load, the bounce chance goes up by 106%.
+>     
+> * If a website takes 1 to 10 seconds to load, the bounce chance goes up by 123%.
+>     
+> 
+> You can visit [this link](https://www.thinkwithgoogle.com/intl/en-emea/marketing-strategies/app-and-mobile/mobile-page-speed-new-industry-benchmarks/) for detailed statistics.
+
+This article and upcoming articles cover all the concepts of caching by diving deep into caching, and we will understand how it increases the performance of an application practically in the upcoming articles.
+
+## What is Caching?
+
+Caching is the process of storing frequently accessed data in temporary storage called a cache to improve data retrieval speed.
+
+### Understanding the Scenario Without Caching
+
+Imagine user A creates a post. All their connections receive a notification about this post, and several users click on it to read the details. When a user clicks, the backend service requests the post details from the database. The database responds, and the backend sends the details back to the client.
+
+For small user groups, this works fine. However, as the user base grows, the number of database requests increases. Databases have a limit to the number of concurrent requests they can handle, leading to slower response times and a poor user experience.
+
+### Introducing the Caching Layer
+
+Caching solves this problem. For example, if user 1 requests the details of postId = 2345 and user 2 makes the same request shortly after, a caching layer can be used. Here’s how it works:
+
+1. **Cache Check**: The post service first checks the cache for postId = 2345.
+    
+2. **Cache Hit**: If the data is in the cache, it’s returned directly without querying the database.
+    
+3. **Cache Miss**: If the data isn’t in the cache, the database is queried. Once retrieved, the data is stored in the cache for future requests.
+    
+
+### But how caching is making it faster?
+
+1. **We’re storing the same data in another database and fetching the details from it. So how is it faster?**
+    
+    * Cache stores data in primary memory instead of secondary memory. Fetching data from primary memory is much faster than fetching it from secondary memory.
+        
+2. **Why don’t we store all the data in the cache if it’s faster?**
+    
+    * The cache uses primary memory, which is more expensive than secondary memory. Thus, we can only store a limited amount of data in the cache, usually the most frequently accessed data. *Data in the cache is often deleted after a certain time to make space for new data.*
+        
+
+![Illustration 1](/content/articles/images/system-design-all-about-caching-part-1/inline-image-1.png)
+
+## Populating the cache
+
+Cache population refers to the process of **adding data to the cache**. This involves deciding:
+
+1. When to add data
+    
+2. How to add data
+    
+3. What data to store
+    
+
+## Cache Population Strategies
+
+### 1\. Lazy Population (Lazy Loading / Cache-Aside)
+
+##### **How it works:**
+
+1. Check the cache for data.
+    
+2. If data exists (**cache hit**), return it.
+    
+3. If data is missing (**cache miss**):
+    
+    * Fetch it from the database.
+        
+    * Store it in the cache with an expiry.
+        
+    * Return the data to the user.
+        
+
+![Illustration 2](/content/articles/images/system-design-all-about-caching-part-1/inline-image-2.png)
+
+##### **Real-world Use Case:**
+
+Let’s take an e-commerce site like Amazon. When you search for a product, the cache intercepts the request. If it can’t find the product (cache miss), the cache itself queries the database, caches the result, and then returns the product information to you.
+
+**Implementation**
+
+```python
+# Lazy Population (Cache-Aside)
+# E-commerce product search
+# Assuming cache and database are initialized at global level
+
+def get_product_details(product_id):
+    """
+    Fetch product details using cache-aside pattern
+    """
+    def fetch_from_db(pid):
+        return database.query(f"SELECT * FROM products WHERE id = {pid}")
+    
+    # Try to get from cache first
+    product = cache.get(f"product:{product_id}")
+    if product:
+        return product
+        
+    # On cache miss, get from database
+    product = fetch_from_db(product_id)
+    if product:
+        # Store in cache with 1-hour expiry
+        cache.set(f"product:{product_id}", product, expire=3600)
+    return product
+```
+
+### 2\. Eager Population (Write-Through)
+
+##### **How it works:**
+
+* Updates both cache and database simultaneously.
+    
+* Ensures data consistency but increases write latency.
+    
+
+![Illustration 3](/content/articles/images/system-design-all-about-caching-part-1/inline-image-3.png)
+
+##### **Real-world Use Case:**
+
+Imagine a blogging platform. Every time a user posts a new blog, the application writes the blog to the database and the cache at the same time, ensuring that the latest blogs are always available in the cache.
+
+**Implementation**
+
+```python
+# Write-Through
+# Blog post creation
+# Assuming cache and database are initialized at global level
+
+def create_blog_post(post_data):
+    """
+    Create a new blog post using write-through pattern
+    """
+    # Write to database first
+    post_id = database.execute(
+        "INSERT INTO posts (title, content, author) VALUES (?, ?, ?)",
+        [post_data['title'], post_data['content'], post_data['author']]
+    )
+    
+    # Immediately write to cache
+    cache_key = f"post:{post_id}"
+    post_data['id'] = post_id
+    cache.set(cache_key, post_data, expire=86400)  # 24-hour cache
+    
+    return post_id
+```
+
+### 3\. Write-Behind (Write-Back)
+
+##### **How it works:**
+
+* Writes are made to the cache immediately.
+    
+* The database is updated asynchronously in batches.
+    
+
+![Illustration 4](/content/articles/images/system-design-all-about-caching-part-1/inline-image-4.png)
+
+##### **Real-world Use Case:**
+
+Consider a ‘like’ functionality on a social media site. The action of liking a post is first written to the cache. The cache then updates the database after a delay, perhaps aggregating multiple ‘likes’ in the process. This helps in efficiently handling a high rate of ‘like’ actions, minimizing the number of database operations.
+
+**Implementation**
+
+```python
+# Write-Behind
+# Social media post likes
+# Assuming cache and database are initialized at global level
+
+def flush_likes_to_db(post_id, pending_likes):
+    # Bulk insert likes to database
+    cache_key = f"post_likes:{post_id}"
+    values = [(post_id, uid) for uid in pending_likes]
+    database.executemany(
+        "INSERT INTO post_likes (post_id, user_id) VALUES (?, ?)",
+        values
+    )
+    cache.delete(cache_key)
+    
+# Trigger async flush
+def add_post_like(post_id, user_id):
+    """
+    Handle post like using write-behind pattern
+    """
+    cache_key = f"post_likes:{post_id}"
+    
+    # Add like to cache immediately
+    pending_likes = cache.get(cache_key) or []
+    pending_likes.append(user_id)
+    cache.set(cache_key, pending_likes, expire=300)  # 5-minute expiry
+    
+    # Database is not updated instantly, 
+    # but it gets updated after the likes is greater than 100
+    if len(pending_likes) >= 100:  # Batch size threshold
+        # Trigger async flush
+        import asyncio
+        asyncio.create_task(flush_likes_to_db(post_id, pending_likes))
+```
+
+### 4\. Refresh-Ahead
+
+##### **How it works:**
+
+* Predicts future cache usage based on access patterns.
+    
+* Proactively refreshes data before expiration.
+    
+
+![Illustration 5](/content/articles/images/system-design-all-about-caching-part-1/inline-image-5.png)
+
+##### **Real-world Use Case:**
+
+Consider a weather app that needs to show hourly weather updates. The app can use a Refresh-Ahead strategy to pre-fetch the next hour’s weather data before the current hour’s data expires. This ensures that users always receive up-to-date weather information instantly
+
+**Implementation**
+
+```python
+# Refresh-Ahead
+# Weather forecast caching
+# Assuming cache and weather_api are initialized at global level
+
+def get_weather_forecast(location_id):
+    """
+    Get weather data using refresh-ahead pattern
+    """
+    cache_key = f"weather:{location_id}"
+    
+    def should_refresh(cached_data):
+        # Check if data is approaching expiry (within 15 minutes)
+        return cached_data and cached_data['expires_at'] - time.time() < 900
+    
+    def refresh_cache():
+        # Fetch new weather data
+        forecast = weather_api.get_forecast(location_id)
+        # Cache for 1 hour
+        forecast['expires_at'] = time.time() + 3600
+        cache.set(cache_key, forecast, expire=3600)
+        return forecast
+    
+    # Get current cached data
+    current_data = cache.get(cache_key)
+    
+    # If data exists but approaching expiry, trigger refresh
+    if should_refresh(current_data):
+        import threading
+        threading.Thread(target=refresh_cache).start()
+        
+    # Return current data if exists, otherwise fetch new
+    return current_data if current_data else refresh_cache()
+```
+
+---
+
+In this article, we explored different caching strategies that can significantly improve application performance. Understanding these patterns helps us make informed decisions about implementing caching in our applications. In upcoming articles, we will learn more about the architecture and practical implementation.

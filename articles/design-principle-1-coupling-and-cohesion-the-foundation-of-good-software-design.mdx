@@ -1,0 +1,179 @@
+---
+title: "Design Principle #1: Coupling and Cohesion — The Foundation of Good Software Design"
+brief: "A good design generally aims for low coupling and high cohesion."
+publishedAt: "2026-06-08T18:59:54.407Z"
+category: "Low Level Design"
+tags:
+  - "Low Level Design"
+series:
+  name: "Low Level Design"
+  slug: "low-level-design"
+coverImage:
+  url: "/content/articles/images/design-principle-1-coupling-and-cohesion-the-foundation-of-good-software-design/cover.png"
+---
+Before learning design principles, we need to understand some terms:
+
+## Cohesion and Coupling
+
+These are probably the most important concepts in software design. Almost every design decision eventually boils down to:
+
+*   Is the coupling too high?
+    
+*   Is the cohesion too low?
+    
+
+## What is Coupling?
+
+Coupling simply means how much a piece of code is attached (coupled) to another piece of code. (You might have heard the term **tightly coupled**.)
+
+### High Coupling
+
+```java
+class EmailService {
+    void sendEmail() {}
+}
+
+class UserService {
+    EmailService emailService = new EmailService();
+
+    void registerUser() {
+        emailService.sendEmail();
+    }
+}
+```
+
+Here `UserService` directly creates `EmailService`.
+
+If tomorrow:
+
+*   `EmailService` changes
+    
+*   `SMSService` is introduced
+    
+*   Push Notifications are introduced
+    
+
+then `UserService` must also change.
+
+Both classes are tightly connected.
+
+This is called **high coupling**.
+
+### Low Coupling
+
+```java
+interface NotificationService {
+    void send();
+}
+
+class EmailService implements NotificationService {
+    public void send() {}
+}
+
+class UserService {
+    private NotificationService notificationService;
+
+    UserService(NotificationService notificationService) {
+        this.notificationService = notificationService;
+    }
+
+    void registerUser() {
+        notificationService.send();
+    }
+}
+```
+
+To solve the above tightly coupled situation, we can create a middle layer that is always used to initiate all types of notification services. Every time a new service is introduced, it will be handled through the `NotificationService` interface.
+
+This is **low coupling**.
+
+## Why Low Coupling?
+
+Because changes become easier.
+
+Suppose the business says:
+
+*   Stop sending emails and start sending WhatsApp notifications.
+    
+
+With low coupling:
+
+```java
+new WhatsAppNotificationService()
+```
+
+That's it.
+
+No changes in `UserService`.
+
+## What is Cohesion?
+
+Cohesion defines how closely related the responsibilities inside a class are.
+
+### High Cohesion
+
+```java
+class PaymentService {
+
+    void validatePayment() {}
+
+    void processPayment() {}
+
+    void refundPayment() {}
+}
+```
+
+Everything is related to payments.
+
+This is **high cohesion**.
+
+### Low Cohesion
+
+```java
+class Utility {
+
+    void processPayment() {}
+
+    void generateInvoice() {}
+
+    void sendEmail() {}
+
+    void compressImage() {}
+
+    void calculateSalary() {}
+}
+```
+
+This class is doing random things.
+
+This is **low cohesion**.
+
+## Why High Cohesion?
+
+Because code becomes:
+
+*   Easy to understand
+    
+*   Easy to test
+    
+*   Easy to maintain
+    
+*   Easy to extend
+    
+
+When you open `PaymentService`, you immediately know what it contains.
+
+## Golden Rule of Software Engineering
+
+A good design generally aims for **low coupling** and **high cohesion**.
+
+In fact:
+
+*   SOLID tries to achieve it.
+    
+*   Design Patterns try to achieve it.
+    
+*   Good architectures try to achieve it.
+    
+
+Everything comes back to these two ideas. So, we always have to keep these two terms in mind while solving a problem or learning a design pattern.

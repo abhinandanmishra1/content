@@ -1,0 +1,263 @@
+---
+title: "Complete Guide to MySQL Installation and Basic Operations"
+brief: "Mastering MySQL: A Step-by-Step Installation and Operations Guide"
+publishedAt: "2024-12-12T18:30:00.000Z"
+category: "Databases & Systems"
+tags:
+  - "Databases & Systems"
+series:
+  name: "Databases"
+  slug: "databases"
+coverImage:
+  url: "/content/articles/images/complete-guide-to-mysql-installation-and-basic-operations/cover.jpeg"
+---
+## 1\. Installation Guide
+
+### For MacOS
+
+**Using Homebrew:**
+
+```bash
+# Install Homebrew if not installed
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install MySQL
+brew install mysql
+
+# Start MySQL Service
+brew services start mysql
+```
+
+### For Linux (Ubuntu/Debian)
+
+```bash
+# Update package list
+sudo apt update
+
+# Install MySQL
+sudo apt install mysql-server
+
+# Start MySQL Service
+sudo systemctl start mysql
+sudo systemctl enable mysql
+```
+
+### For Windows
+
+1. Download MySQL Installer from official website: [https://dev.mysql.com/downloads/installer/](https://dev.mysql.com/downloads/installer/)
+    
+2. Run the installer
+    
+3. Choose "Developer Default" or "Server only" setup type
+    
+4. Follow the installation wizard
+    
+5. Configure MySQL Server
+    
+6. Start MySQL Service from Windows Services
+    
+
+## 2\. Initial Setup and Security
+
+After installation, secure your MySQL installation:
+
+```bash
+# For MacOS and Linux
+mysql_secure_installation 
+
+# For Windows
+# Run MySQL Installer and choose Reconfigure
+```
+
+This will:
+
+* Set root password
+    
+* Remove anonymous users
+    
+* Disable remote root login
+    
+* Remove test database
+    
+
+## 3\. User Management
+
+Creating and managing users:
+
+```sql
+-- Create new user
+CREATE USER 'devuser'@'localhost' IDENTIFIED BY 'password123';
+
+-- Grant privileges
+GRANT ALL PRIVILEGES ON *.* TO 'devuser'@'localhost';
+-- Or for specific database
+GRANT ALL PRIVILEGES ON mydatabase.* TO 'devuser'@'localhost';
+
+-- Apply privileges
+FLUSH PRIVILEGES;
+
+-- Show user privileges
+SHOW GRANTS FOR 'devuser'@'localhost';
+
+-- Change user password
+ALTER USER 'devuser'@'localhost' IDENTIFIED BY 'newpassword';
+```
+
+## 4\. Database Operations
+
+### Basic Database Operations
+
+```sql
+-- Create database
+CREATE DATABASE mydatabase;
+
+-- Show databases
+SHOW DATABASES;
+
+-- Use database
+USE mydatabase;
+
+-- Delete database
+DROP DATABASE mydatabase;
+```
+
+### Table Operations
+
+```sql
+-- Create table
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Show tables
+SHOW TABLES;
+
+-- Describe table structure
+DESCRIBE users;
+
+-- Add column
+ALTER TABLE users ADD COLUMN phone VARCHAR(15);
+
+-- Modify column
+ALTER TABLE users MODIFY email VARCHAR(150) NOT NULL;
+
+-- Drop column
+ALTER TABLE users DROP COLUMN phone;
+
+-- Drop table
+DROP TABLE users;
+```
+
+### Data Operations
+
+```sql
+-- Insert data
+INSERT INTO users (username, email) 
+VALUES ('john_doe', 'john@example.com');
+
+-- Insert multiple rows
+INSERT INTO users (username, email) VALUES 
+('jane_doe', 'jane@example.com'),
+('bob_smith', 'bob@example.com');
+
+-- Select data
+SELECT * FROM users;
+SELECT username, email FROM users WHERE id > 1;
+
+-- Update data
+UPDATE users SET email = 'newemail@example.com' 
+WHERE username = 'john_doe';
+
+-- Delete data
+DELETE FROM users WHERE username = 'john_doe';
+```
+
+## 5\. Transaction queries
+
+### Check Transaction Isolation Level
+
+```sql
+-- Check current transaction isolation level
+SELECT @@transaction_isolation;
+
+-- Set transaction isolation level
+SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;
+```
+
+Available isolation levels:
+
+* READ UNCOMMITTED
+    
+* READ COMMITTED
+    
+* REPEATABLE READ (MySQL default)
+    
+* SERIALIZABLE
+    
+
+### Transaction Commands
+
+```sql
+-- Start transaction
+START TRANSACTION;
+
+-- Create savepoint
+SAVEPOINT my_savepoint;
+
+-- Rollback to savepoint
+ROLLBACK TO SAVEPOINT my_savepoint;
+
+-- Commit transaction
+COMMIT;
+
+-- Rollback entire transaction
+ROLLBACK;
+```
+
+### Check Database Engine
+
+```sql
+-- Show table engine
+SHOW TABLE STATUS WHERE Name = 'users';
+
+-- Change table engine to InnoDB (supports transactions)
+ALTER TABLE users ENGINE = InnoDB;
+```
+
+## 6\. Common Issues and Troubleshooting
+
+### Access Denied Issues
+
+```sql
+-- Reset root password (if forgotten)
+-- For MySQL 8.0+
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'new_password';
+```
+
+### Check Server Status
+
+```bash
+# MacOS
+brew services list
+
+# Linux
+sudo systemctl status mysql
+
+# Windows
+sc query MySQL80
+```
+
+### View Error Logs
+
+```bash
+# MacOS & Linux
+sudo tail -f /var/log/mysql/error.log
+
+# Windows
+# Check Windows Event Viewer
+```
+
+Now you can use MySQL on your local system to perform SQL operations on the local database.

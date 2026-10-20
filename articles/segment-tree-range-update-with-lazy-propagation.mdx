@@ -1,0 +1,223 @@
+---
+title: "Segment Tree: Range update with lazy propagation"
+brief: "When moving from a normal segment tree to a lazy segment tree, the main goal is to support efficient range updates. In a standard segment tree, updating a…"
+publishedAt: "2025-10-05T10:42:58.078Z"
+category: "Data Structures & Algorithms"
+tags:
+  - "Data Structures & Algorithms"
+  - "Segment Tree"
+  - "Trees"
+  - "Algorithms"
+series:
+  name: "DSA & Algorithms"
+  slug: "dsa"
+coverImage:
+  url: "/content/articles/images/segment-tree-range-update-with-lazy-propagation/cover.png"
+---
+When moving from a **normal segment tree** to a **lazy segment tree**, the main goal is to **support efficient range updates**. In a standard segment tree, updating a range `[l, r]` requires visiting every affected leaf node, which is `O(n)` in the worst case. Lazy propagation **avoids this** by postponing updates until absolutely necessary.
+
+Here are the **key changes**:
+
+---
+
+## 1\. Introducing the `lazy` Array
+
+**What it is:**
+
+* A new array `lazy[]` is added, same size as the segment tree.
+    
+* Stores **pending updates** for each node.
+    
+* Initially, all values are `0`.
+    
+
+**Why it’s necessary:**
+
+* Without it, we’d have to immediately update every child node whenever a range update occurs.
+    
+* With `lazy[]`, we **mark a node as “needs update”** and propagate only when required, reducing the time complexity from `O(n)` to `O(log n)` per operation.
+    
+
+**Modification from previous implementation:**
+
+```cpp
+vector<ll> lazy(4*n, 0); // new array for lazy updates
+```
+
+---
+
+## 2\. The `push()` Function
+
+**Purpose:**
+
+* Apply any **pending updates** stored in `lazy[node]` to the node itself.
+    
+* If the node is not a leaf, propagate the pending update to its children.
+    
+* Clear the lazy value after pushing.
+    
+
+**Code Snippet:**
+
+```cpp
+void push(ll lo, ll hi, ll node) {
+    if(lazy[node] != 0) {
+        // Apply the pending update to current node
+        tree[node] += (hi - lo + 1) * lazy[node];
+
+        // If not a leaf, propagate to children
+        if(lo != hi) {
+            lazy[2*node+1] += lazy[node];
+            lazy[2*node+2] += lazy[node];
+        }
+
+        // Clear lazy value
+        lazy[node] = 0;
+    }
+}
+```
+
+**Why it’s necessary:**
+
+1. **Delayed updates:** The segment value might not be correct until we push the lazy value.
+    
+2. **Correct query results:** Any query on this node must first include pending updates.
+    
+3. **Propagation:** Ensures children also receive the updates when needed.
+    
+
+**When to call** `push()`:
+
+* **Before querying a node** → ensure its value is up-to-date.
+    
+* **Before descending during an update** → ensure children inherit the correct pending updates.
+    
+
+---
+
+## 3\. Modifying the `update` Function
+
+In the standard segment tree, we directly updated every node in the range. Now, with lazy propagation:
+
+* **Total overlap:**
+    
+    * Don’t immediately update children.
+        
+    * Instead, **store the update in** `lazy[node]` and push when required.
+        
+* **Partial overlap:**
+    
+    * First, `push()` the node to ensure correctness.
+        
+    * Then, recurse into children.
+        
+
+**Why this change is necessary:**
+
+* It ensures **range updates are still** `O(log n)`, instead of visiting every affected leaf node.
+    
+* Keeps queries correct even after multiple overlapping range updates.
+    
+
+### Modified update function
+
+```cpp
+// Range update with lazy propagation
+void update_lazy(ll q_lo, ll q_hi, ll lo, ll hi, ll node, ll val) {
+    push(lo, hi, node); // apply any pending updates first
+
+    // Completely outside
+    if(lo > q_hi || hi < q_lo) return;
+
+    // Completely inside
+    if(lo >= q_lo && hi <= q_hi) {
+        lazy[node] += val;   // add pending update
+        push(lo, hi, node);  // apply it now, why?
+        // because the any ancestor looking for this node should get correct value
+        return;
+    }
+
+    // Partial overlap: recurse to children
+    ll mid = lo + (hi - lo)/2;
+    update_lazy(q_lo, q_hi, lo, mid, 2*node+1, val);
+    update_lazy(q_lo, q_hi, mid+1, hi, 2*node+2, val);
+
+    // Update current node value after children updated
+    tree[node] = operation(tree[2*node+1], tree[2*node+2]);
+}
+```
+
+---
+
+## 4\. Query Function Changes
+
+For normal segment trees:
+
+* Query just combines the values of child nodes along the path.
+    
+
+For lazy segment trees:
+
+* **Before using a node’s value**, always call `push()` → ensures all pending updates affecting this node are applied.
+    
+
+**Effect:**
+
+* Queries no longer return stale values.
+    
+* Even if multiple updates were delayed in ancestors, the query sees the correct value.
+    
+
+### Modified query function
+
+**Point query**
+
+```cpp
+// Point query after range updates
+ll query_lazy(ll idx, ll lo, ll hi, ll node) {
+    push(lo, hi, node); // ensure current node is up-to-date
+
+    if(lo == hi) return tree[node]; // reached leaf
+
+    ll mid = lo + (hi - lo) / 2;
+    if(idx <= mid) return query_lazy(idx, lo, mid, 2*node+1);
+    else return query_lazy(idx, mid+1, hi, 2*node+2);
+}
+```
+
+**Range query**
+
+```cpp
+// Range query after range updates
+ll query_range(ll q_lo, ll q_hi, ll lo, ll hi, ll node) {
+    push(lo, hi, node); // make sure current node is up-to-date
+
+    // Completely outside
+    if(lo > q_hi || hi < q_lo) return NEUTRAL;
+
+    // Completely inside
+    if(lo >= q_lo && hi <= q_hi) return tree[node];
+
+    // Overlap: query children
+    ll mid = lo + (hi - lo)/2;
+    ll left = query_range(q_lo, q_hi, lo, mid, 2*node+1);
+    ll right = query_range(q_lo, q_hi, mid+1, hi, 2*node+2);
+
+    return operation(left, right);
+}
+```
+
+---
+
+### ⚡ Summary of Lazy Propagation Modifications
+
+| Feature | Standard Segment Tree | Lazy Segment Tree |
+| --- | --- | --- |
+| Range Update | Update all nodes in `[l,r]` | Store update in `lazy[]`, apply when needed |
+| Query | Just traverse tree | Call `push()` before accessing value |
+| Leaf Updates | Directly | Apply lazy updates if pending |
+| Complexity | O(n) for range update | O(log n) |
+
+---
+
+This **push mechanism and lazy array** are the core differences. Once you understand them, you can adapt your previous segment tree implementations for **any range update + query problem**.

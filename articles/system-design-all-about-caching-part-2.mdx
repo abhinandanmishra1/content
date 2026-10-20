@@ -1,0 +1,177 @@
+---
+title: "System Design - All about Caching - Part 2"
+brief: "Understanding Different Levels of Caching in System Architecture"
+publishedAt: "2025-12-14T14:26:52.347Z"
+category: "System Design"
+tags:
+  - "System Design"
+  - "Caching"
+  - "Redis"
+series:
+  name: "System Design"
+  slug: "system-design"
+coverImage:
+  url: "/content/articles/images/system-design-all-about-caching-part-2/cover.webp"
+---
+Caching is like having strategic storage spaces throughout a delivery system - from the neighborhood store to your kitchen pantry. Each level of caching serves a specific purpose in improving system performance. Let's explore each type with real-world examples.
+
+> Caching is good for optimizing performance, but over-caching may lead to high staleness and invalidation issues.
+
+## 1\. Client-Side Caching
+
+When we visit websites like social media platforms or news sites, our browser saves images, scripts, and page layouts locally. When the user revisits the same websites, instead of downloading the resources again, it serves them from the cache.
+
+We can implement caching in our application on the client side by using state management libraries and HTTP request-response caching (to reduce API calls with the same parameters). Libraries like `react-query` are available for React and React Native applications.
+
+**Example:**
+
+* When you use Instagram in your browser, it saves profile pictures, post images, and UI elements locally. The next time you open Instagram, these elements load instantly from your device instead of downloading them again.
+    
+* Mobile apps like Spotify store your most-played songs on your phone, so you can listen to them even with a poor internet connection.
+    
+
+![Illustration 1](/content/articles/images/system-design-all-about-caching-part-2/inline-image-1.png)
+
+**Benefits:**
+
+* Faster page loading
+    
+* Reduced data usage
+    
+* Better offline experience
+    
+
+**Challenges:**
+
+* Limited storage space on user devices
+    
+* Need to manage cache expiration and invalidation to avoid stale responses on data updates
+    
+
+## 2\. CDN Caching
+
+Think of CDN caching as having multiple convenience stores in different neighborhoods instead of one central supermarket. Each store stocks the most popular items for that area.
+
+CDN referred to as Content Delivery Network, caches data based on geographical area to serve cached results for a region instead of refetching from the server.
+
+Let's say your main server is based in the United States and you're fetching data from Bangalore, India. The first time a user fetches that website or data, it gets cached to the CDN of their area. When another user from Bangalore fetches the same data, it will be served directly from the CDN instead of the main server.
+
+**Example:**
+
+* Netflix uses CDNs to store popular movies and shows in servers closer to viewers. If many people in Tokyo are watching "Stranger Things," Netflix keeps a copy on servers in Japan instead of streaming it from the US every time.
+    
+* Gaming platforms like Steam use CDNs to distribute game downloads, ensuring faster download speeds by serving content from the nearest server.
+    
+
+![Illustration 2](/content/articles/images/system-design-all-about-caching-part-2/inline-image-2.png)
+
+**Benefits:**
+
+* Faster content delivery
+    
+* Reduced origin server load
+    
+* Better handling of traffic spikes
+    
+
+## 3\. Web Server Caching
+
+Consider this like a restaurant's expediter who remembers common orders and can prepare them without asking the chef.
+
+This can be implemented using a reverse proxy. A reverse proxy is a server-facing component that centralizes all internal services and provides a unified interface to the client or public. At the reverse proxy server level, the response for frequent requests can be cached and served directly without calling the main server again. It is also used for caching static files like HTML, CSS, images, and videos for low latency.
+
+**Example:**
+
+* News websites cache their homepage and popular articles at the web server level. When breaking news occurs, millions of readers can access the story quickly without overwhelming the database.
+    
+* E-commerce sites like Amazon cache product listings and search results pages during high-traffic events like Prime Day.
+    
+
+**Benefits:**
+
+* Reduced database load
+    
+* Faster response times
+    
+* Better handling of traffic spikes
+    
+
+![Illustration 3](/content/articles/images/system-design-all-about-caching-part-2/inline-image-3.png)
+
+## 4\. Database Caching
+
+Picture this as a librarian who keeps recently requested books on their desk instead of fetching them from shelves repeatedly.
+
+For a social media platform, a user can have multiple posts. Instead of writing a query to fetch all the user's posts from the posts table to show the number of posts, we can add a new column in the user table called `total_posts` to store the count of posts. Every time the user creates or deletes a post, the `total_posts` gets updated with a new value. This is how a database can also be used for caching and reducing query times.
+
+**Example:**
+
+* When you check your Gmail inbox, frequently accessed emails are cached in the database cache. This is why your recent emails load almost instantly while older ones take longer to appear.
+    
+* Banking applications cache account balances and recent transactions for quick access while maintaining the full transaction log in the main database.
+    
+
+![Illustration 4](/content/articles/images/system-design-all-about-caching-part-2/inline-image-4.png)
+
+**Benefits:**
+
+* Reduced database queries
+    
+* Faster data retrieval
+    
+* Lower database server load
+    
+
+## 5\. Application Caching
+
+Think of this as a chef's mise en place - keeping frequently used ingredients ready at hand instead of getting them from the store each time.
+
+Application-level caching involves storing frequently accessed data in memory using caching systems like Redis or Memcached. This type of caching is particularly useful for data that's expensive to compute or retrieve but needs to be accessed frequently.
+
+**Example:**
+
+* Session management in web applications: When you log into an e-commerce site, your session information (user details, shopping cart) is stored in Redis for quick access.
+    
+* Gaming leaderboards: Games use Redis to maintain real-time leaderboards, caching player scores and rankings for instant updates.
+    
+* Social media feeds: Platforms like Twitter cache trending topics and hashtags in memory to serve millions of requests without hitting the database.
+    
+* Search suggestions: When you type in a search bar, the autocomplete suggestions often come from an application cache rather than real-time database queries.
+    
+
+![Illustration 5](/content/articles/images/system-design-all-about-caching-part-2/inline-image-5.png)
+
+**Benefits:**
+
+* Ultra-fast data access
+    
+* Reduced database load
+    
+* Support for real-time features
+    
+* Improved application scalability
+    
+* Lower latency for frequently accessed data
+    
+
+**Challenges:**
+
+* Memory management and allocation
+    
+* Cache consistency across multiple application servers
+    
+* Determining optimal cache size and eviction policies
+    
+
+**Implementation Strategies:**
+
+* Use distributed caching solutions like Redis Cluster for high-availability
+    
+* Implement cache-aside pattern for reading data
+    
+* Use write-through or write-behind patterns for updating cached data
+    
+* Set appropriate Time-To-Live (TTL) values based on data volatility
+    
+
+That’s all about the context of this article, I hope you’ve understood the concepts of caching and how it is implemented at different levels of the architecture.

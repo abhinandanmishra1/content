@@ -1,0 +1,289 @@
+---
+title: "Web 3 Chapter - 1: Basics of web3 and blockchain"
+brief: "A deep dive into the basics of blockchain, covering all the doubts that come to mind"
+publishedAt: "2024-08-17T08:00:34.281Z"
+category: "Web3 & Blockchain"
+tags:
+  - "Web3 & Blockchain"
+  - "Web3"
+  - "Blockchain"
+  - "Ethereum"
+series:
+  name: "Web3 Mastery"
+  slug: "web3-mastery"
+coverImage:
+  url: "/content/articles/images/web-3-chapter-1-basics-of-web3-and-blockchain/cover.jpeg"
+---
+This chapter will explain the basics of Web3 technology and blockchain. We will explore the evolution of the web and discuss the advantages and disadvantages of each stage.
+
+### What is the Web?
+
+The **World Wide Web**, commonly referred to as **WWW** or simply the **Web**, is a system of interconnected public pages that can be accessed through the Internet.
+
+> While people often think the Web and the Internet are the same, the Internet is actually a vast network of interconnected computers or machines that can communicate with each other. <mark>The Web is just one of the many applications built on top of the Internet.</mark>
+
+You can learn more about the web on [MDN Official Docs.](https://developer.mozilla.org/en-US/docs/Glossary/World_Wide_Web)
+
+### Evolution of web
+
+#### **1992 - 2004: Web 1.0**
+
+Initially, Web 1.0 was the first version of the Web, where most people were consumers because only static pages were served from the file system (not a database), and only web developers had access to update or create content. The rest of the people were consumers only.
+
+> **Problem:** Web 1.0 was not very efficient because only a few people were able to share their ideas, while the majority could only consume the content.
+
+#### 2004 - today: Web 2.0 ( extended version of Web 1.0)
+
+The current version of the Web is Web 2.0, where users are both content creators and consumers. People can share their knowledge, create posts, and write comments on platforms like Hashnode, LinkedIn, Instagram, etc. In this era of the Web, people are both consumers and content creators.
+
+> **Problem:** Web 2.0 uses centralized databases where all the data about users—their posts, articles, comments, and more—is stored. Users cannot access this data directly, but the platforms they provide it to can use it for marketing purposes, making it vulnerable.
+
+#### Future: Web 3.0 ( extended version of Web 2.0)
+
+Web 3.0 is poised to be the next version of the Web, where users will have the authority to read, write, and execute data. Instead of being stored on a single database, data will be distributed across multiple nodes or within a decentralized database, and users will have access to it.
+
+> **Potential Problem:** Web 3.0 is based on a technology called blockchain, which relies heavily on cryptographic strategies to ensure data security, allowing only authorized individuals to access it. These cryptographic processes require extensive mathematical calculations, which can only be handled by machines with high computational power. These machines consume a significant amount of energy, potentially impacting the environment.
+> 
+> <mark>Solution to this problem might drive the next evolution of the web</mark>.
+
+### What is Web 3?
+
+<mark>Web3, or Web 3.0, is a decentralized, blockchain-based version of the Internet that gives users more control over their data and online experience</mark>. It's intended to be the next stage of Internet development.
+
+In Web3, decisions are made by a community of token holders, rather than by a CEO, manager, or board of directors. These decisions are made transparently and are publicly documented on a blockchain.
+
+**Web3 incorporates concepts such as:**
+
+1. Token-based economics
+    
+2. Smart contracts
+    
+3. Non-fungible tokens (NFTs)
+    
+
+> Note: We will explore these concepts in upcoming chapters.
+
+### What is Blockchain?
+
+A blockchain is a highly secure, reliable, and decentralized network that allows people to record transaction activity, store data, and exchange value in a distributed ledger that is not controlled by any central authority, but instead maintained by computers all around the world.
+
+> In simple terms, blockchain allows you to share data in a highly secure manner, ensuring that users own their data. Rather than being stored in a single location, the data is distributed across multiple machines in a decentralized network.
+
+### How does blockchain work?
+
+Before understanding how blockchain works, let's first examine how a centralized system functions.
+
+#### How does a centralized system work?
+
+When a transaction occurs between Person A and Person B, it is recorded in a ledger (a file of records). This ledger is maintained by a centralized authority (such as a bank in the case of payments). As end users, we trust this central authority to accurately record the amount of money sent or received in a transaction, without any deceit.
+
+#### How does a blockchain network work?
+
+In a blockchain network, there is no single central authority to manage the ledger. Instead, multiple nodes or participants have access to add transactions to the ledger. This raises several questions: if multiple people can add transactions, won't they be able to manipulate the records or duplicate transactions in the ledger?
+
+These questions were arisen in my mind when I was learning it for the first time.
+
+1. If multiple people can add transactions to the ledger, what if someone manipulates it or duplicates transactions, making the sender transfer more money to the receiver?
+    
+2. If fraud occurs and there is no central authority, who is to blame?
+    
+3. What if those with authority support a specific person or group, potentially allowing them to manipulate transactions or engage in illegal activities?
+    
+
+The answers lie in the inner workings of blockchain technology and how cryptography and mathematics ensure data integrity and prevent manipulation.
+
+Let's illustrate this with an example:
+
+Alice, Bob, Charlie, and John are four participants in the blockchain network, and transactions between them are recorded in each person's ledger. Whenever a transaction occurs, each participant broadcasts it so that everyone can update their ledger. But how can we verify that the person broadcasting the message is indeed the one who conducted the transaction?
+
+This is where cryptography plays a crucial role. Each participant has a `public key` and a `private key` pair used for encryption and decryption. When a participant broadcasts a transaction, they sign the message with the `private key`, which is known only to them. The recipient can then verify the authenticity of the message using the sender's `public key`.
+
+**The Pseudo Code of the sender signing the message with their private key**
+
+```javascript
+const signature = Signature(message, private_key);
+// signature is different for every different message
+broadcast({message, signature})
+```
+
+**The Pseudo Code of the receiver verifying the message with their public key**
+
+```javascript
+const { message, signature, public_key} = received_data;
+ 
+const isValidSender = Verify(message, signature, public_key);
+// it returns true or false based on that 
+// the message is stored in the ledger
+if(isValidSender) {
+    addMessageToLedger(message, signature, public_key);
+}else {
+    throw new Error("The transaction is not valid")
+}
+```
+
+![Illustration 1](/content/articles/images/web-3-chapter-1-basics-of-web3-and-blockchain/inline-image-1.png)
+
+**Doubt 1**
+
+> **Can a person find the signature for a given message using some method?**
+> 
+> Theoretically, someone could attempt to find the signature for a given message by using a brute force approach—trying all possible signatures and verifying each one using the verify function. However, the signature is created using the **SHA-256** algorithm, which generates a hash or digest from the `message` and the `private key`, making it irreversible.
+> 
+> The SHA-256 algorithm produces a unique 256-bit binary number for each different message. If someone attempts a brute force attack, they would have to check 2^256 possible permutations to find a valid signature.
+> 
+> $$Operations = 2^{256} = (2^{32})^8 = (4 \text{ Billion})^8$$
+> 
+> It's a very big number, that will take so much of compute, power, time to find a signature for a single message that makes it unfeasible to hack the signature.
+
+**Doubt 2**
+
+> **What if a person take the message, signature and public key from a previous transaction and starts broadcasting it multiple times?**
+> 
+> This is indeed a potential problem, as rebroadcasting a previous valid transaction could cause it to be verified repeatedly, even though the transaction is no longer valid.
+> 
+> To prevent this, a unique number, known as a timestamp, is included when creating the signature before broadcasting it to the network. The `timestamp` records the exact time the transaction occurred, and since it is global and constantly increasing, it cannot be tampered with.
+> 
+> If a signature is created at `timestamp = 3`, and someone attempts to broadcast that message later at `t = 4, 5`, or any time in the future, the signature will become invalid.
+> 
+> **Updated Pseudo code with timestamp**
+> 
+> ```javascript
+> const timestamp = Date.now(); // returns the timestamp in js
+> const signature = Signature(message, private_key, timestamp);
+> // signature is different for every different message
+> broadcast({message, signature})
+> ```
+
+**Doubt 3**
+
+> **Can a person send the transactions beyond his limits?**
+> 
+> If a person has `X` number of coins and attempts to send `Y` number of coins where `Y > X`, they would be trying to go beyond their limits.
+> 
+> This issue is easily addressed. The `verify` method will return `false` if the transacted amount exceeds the sender's total balance. In blockchain, anyone can see the total amount a person holds using their public key, ensuring transparency.
+
+**Doubt 4**
+
+> **How can we ensure that everyone is maintaining ledger same ledger because the user can edit their local ledger and others won't be able to know?**
+> 
+> This is a fundamental challenge in a decentralized network, and its solution lies at the **<mark>core of blockchain technology</mark>**.
+> 
+> Let’s explore this solution...
+
+### Concept of Blockchain
+
+Let's explore some important terms before delving into the concept of blockchain. These terms are crucial for understanding how blockchain works:
+
+* Transaction
+    
+* Block
+    
+* Public-Private Addresses
+    
+* Hash
+    
+* Nonce
+    
+* Consensus Mechanism
+    
+
+There are other important terms, but these will suffice for grasping the main idea of blockchain. Let's go through each one:
+
+#### Transaction
+
+A transaction in a blockchain refers to the transfer of data or value between participants on the network. <mark>It is the fundamental unit of operation in blockchain technology</mark>, such as the transfer of cryptocurrency between users.
+
+#### Block
+
+A block is a collection of transactions that are bundled together and added to the blockchain in a sequential manner. Each block contains a list of transactions, a timestamp, a reference to the previous block that is the previous hash, and other important metadata like the block’s hash.
+
+![Illustration 2](/content/articles/images/web-3-chapter-1-basics-of-web3-and-blockchain/inline-image-2.png)
+
+#### Public-Private Addresses
+
+Public and private addresses are key components of the cryptographic system that secures transactions on a blockchain. A public address is like an account number that can be shared with others to receive funds or value, while a private key is a secret code that allows the owner to access and transfer their cryptocurrency or data.
+
+#### Hash
+
+A hash is a fixed-size alphanumeric string generated by a hashing algorithm from an input of any size. It uniquely identifies blocks and transactions in a blockchain. Each block’s hash is derived from its content, ensuring that any change in the block’s data will result in a completely different hash.
+
+> In the blockchain, the SHA-256 algorithm is used to generate a hash based on the given list of transactions, timestamp, and other data. Even a minor change in the data will cause the entire hash to change.
+> 
+> For example,
+> 
+> * **Case 1:**
+>     
+>     * Input: `Abhinandan sent 500 BTC to Harkirat`
+>         
+>     * Hash (using SHA-256): `1b2f5c134ea7f5adfd0572d0434faa47e7d103ebb0fabae19548919e0ea00a41`
+>         
+> * **Case 2:**
+>     
+>     * Input: `abhinandan sent 500 BTC to Harkirat`
+>         
+>     * Hash (using SHA-256): `5a2027c15ea65f6f04ddb476674a1c6630c3bd9c62d9295db74756975cc62a52`
+>         
+> 
+> Notice that changing just the first letter of the sender’s name from uppercase to lowercase results in a completely different hash, and the original string cannot be deduced from the hash alone.
+
+#### Nonce
+
+Nonce refers to a number that is used only once. It is a random number that is used by miners during the mining process to generate a hash of "**transactions -** `{nonce}`" such that it returns a hash that starts with X number of zeros.
+
+> 1. Why the hash starting with X number of 0's is required?
+>     
+>     > Because it's a difficult task to find a nonce that is when appended with transactions gives a hash that starts with X number of 0s.
+>     
+> 2. Why not they choose any other problem why only 0s?
+>     
+>     > There isn't a specific reason for choosing zeros. The goal is to create a mathematically challenging problem that can be easily adjusted in difficulty. <mark>As X (the number of leading zeros required) increases, the problem becomes more difficult</mark>.
+>     
+
+Run the following code on your own and increase/decrease the zeros to understand, how difficult the problem will become when the number of zeros is increased.
+
+%[https://replit.com/@abhinandanmish2/Nonce] 
+
+#### Consensus Mechanism/Protocol
+
+The word **consensus** means that a group of people agrees on something. A consensus algorithm operates similarly; it gets the opinions of multiple participants, and the majority decision wins, similar to an election system in a democratic country.
+
+**Example:** Imagine you and your friends are planning a trip. Everyone suggests different locations, but after discussing, the majority's choice is finalized. This is how consensus works.
+
+> **What does consensus protocol do in blockchain?**
+> 
+> A blockchain, or distributed ledger, is decentralized and operates across multiple nodes that verify transactions. This decentralized nature allows anyone to submit information to the blockchain. To maintain network integrity, consensus protocols are used to ensure that all participants agree on which information to include and which to discard, securing the network.
+
+**How does consensus protocol work?**
+
+Consensus protocols in blockchain networks establish the rules for verifying transactions and determining which data should be added to the blockchain. Without a central authority, all nodes in the network must agree on the network's state by following these predefined protocols.
+
+**What are some of the most common types of consensus protocols?**
+
+1. ##### Proof of work
+    
+
+The first blockchain, Bitcoin, uses Proof-of-Work (PoW) for transaction validation. In this process, "miners" (nodes) use their computers to solve complex cryptographic problems (such as finding a nonce and a hash that starts with a given number of zeros).
+
+When a miner successfully solves a problem, they validate a block of transactions and are rewarded with bitcoin once the block is added to the blockchain.
+
+**Benefits of Proof-of-Work (PoW)**
+
+1. **Data Integrity:**  
+    If anyone tries to manipulate the data, the hash becomes invalid, and they need to mine again to get a valid hash with the required number of leading zeros and nonce.
+    
+2. **Security Through Re-mining:**  
+    If someone manipulates data at block N and re-mines it to make the block valid, the hash value changes. This change causes the `previousHash` values in all subsequent blocks to become invalid, requiring the person to re-mine all the following blocks. Meanwhile, the blockchain keeps growing, making it impossible for the fraudster to catch up.
+    
+3. **The impracticality of Fraud:**  
+    The person attempting fraud would need to keep mining continuously to catch up with the growing blockchain. Beating multiple miners every time is technically unfeasible for a single miner or even a group.
+    
+4. **51% Attack Limitation:**  
+    An attack can succeed only if 51% of miners are on the side of the fraudster. However, this would require enormous computational power and money, making the attack impractical.
+    
+5. **Longest Chain Rule:**  
+    When multiple chains are created, the system accepts the chain that has done the most work, adding an extra layer of security against fraudulent attempts.
+    
+
+This concludes the article, where we've covered the evolution of the web, what Web3 is, how blockchain is used to create a transparent system, and how blockchain works.
+
+If you have any questions or suggestions, feel free to write in the comments.

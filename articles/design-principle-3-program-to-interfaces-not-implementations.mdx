@@ -1,0 +1,84 @@
+---
+title: "Design Principle #3: Program to Interfaces, Not Implementations"
+brief: "This naturally follows Composition Over Inheritance because composition becomes truly powerful when we depend on interfaces instead of concrete classes…"
+publishedAt: "2026-06-09T09:25:24.217Z"
+category: "Low Level Design"
+tags:
+  - "Low Level Design"
+series:
+  name: "Low Level Design"
+  slug: "low-level-design"
+coverImage:
+  url: "/content/articles/images/design-principle-3-program-to-interfaces-not-implementations/cover.png"
+---
+This naturally follows **Composition Over Inheritance** because composition becomes truly powerful when we depend on interfaces instead of concrete classes.
+
+Let's understand with our previous example of UserService that sends a notification to user on email on register.
+
+```java
+class EmailService {
+    void send() {
+        System.out.println("Sending Email");
+    }
+}
+
+class UserService {
+    private EmailService emailService = new EmailService();
+
+    void registerUser() {
+        emailService.send();
+    }
+}
+```
+
+But here as we know this is tightly coupled and if we will need another way of sending notification like Sms, Push notification or Whatsapp message then we will have to edit the UserService and that will be a bad design.
+
+> A new feature should always be a new class addition instead of updating a older class.
+
+## Program to Interfaces
+
+Instead of depending on a concrete classes, abstractions should be used.
+
+Like instead of creating concrete class `EmailService`, we can create an interface for `NotificationService`.
+
+```java
+interface NotificationService {
+    void send();
+}
+
+class EmailService implements NotificationService {
+    public void send() {
+        System.out.println("Sending Email");
+    }
+}
+
+class SMSService implements NotificationService {
+    public void send() {
+        System.out.println("Sending SMS");
+    }
+}
+
+// any new notification service can use same interface
+```
+
+Then:
+
+```java
+class UserService {
+    private NotificationService notificationService;
+
+    UserService(NotificationService notificationService) {
+        this.notificationService = notificationService;
+    }
+
+    void registerUser() {
+        notificationService.send();
+    }
+}
+```
+
+Now, we can create any type of notification service and use it for sending notification without making any change in the **UserService** directly and this gives the flexibility to add as many services as we want.
+
+This principle achieves **low coupling** and **high cohesion**.
+
+> Program to Interfaces, Not Implementations does not mean every class should have an interface. It means that when variation is expected, depend on an abstraction rather than a concrete implementation.

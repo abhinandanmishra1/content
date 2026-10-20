@@ -1,0 +1,237 @@
+---
+title: "All The JavaScript You Need To Know For React"
+brief: "Javascript Important concepts needed for react."
+publishedAt: "2023-01-27T05:24:53.173Z"
+category: "JavaScript & Frontend"
+tags:
+  - "JavaScript & Frontend"
+  - "React"
+series:
+  name: "JavaScript Deep Dive"
+  slug: "javascript"
+coverImage:
+  url: "/content/articles/images/all-the-javascript-you-need-to-know-for-react/cover.png"
+---
+> JavaScript is a programming language that is commonly used to create interactive and dynamic web pages.
+> 
+> In this blog post, we will be discussing everything you need to know to get started with using JavaScript in conjunction with React.
+> 
+> React is a JavaScript library that was created by Facebook for building user interfaces. It allows developers to create reusable components that can be easily integrated into web pages.
+
+### Arrow Functions
+
+Arrow functions are a shorthand syntax for creating anonymous functions in JavaScript. They are used to define a function without giving it a name.
+
+Here's an example of an arrow function that takes one argument and returns the square of that number:
+
+```javascript
+const square = (x) => {
+  return x * x;
+};
+
+console.log(square(5)); // 25
+```
+
+In this example, we define a function `square` using the `const` keyword and an arrow function. The function takes one argument, `x`, and returns the result of `x * x`. We then call the function with the argument `5` and log the result to the console.
+
+### Ternary Operators
+
+Ternary operators are a shorthand way of writing an if-else statement in JavaScript.
+
+Let's create a function that gets a number as input and returns "Greater than 10" if it is, or "Less than or equal to 10" otherwise:
+
+**How do we write this function using normal if-else conditions:**
+
+```javascript
+const checkNumber = (x) => {
+  if (x > 10)
+      return "Greater than 10";
+  else  
+      return "Less than or equal to 10";
+};
+
+console.log(checkNumber(5)); // "Less than or equal to 10"
+console.log(checkNumber(15)); // "Greater than 10"
+```
+
+**The same function is written making use of the ternary operator:**
+
+```javascript
+const checkNumber = (x) => {
+  return x > 10 ? "Greater than 10" : "Less than or equal to 10";
+};
+
+console.log(checkNumber(5)); // "Less than or equal to 10"
+console.log(checkNumber(15)); // "Greater than 10"
+```
+
+> The ternary operator is written as follows condition? logic1 : logic2
+> 
+> if condition is true -&gt; logic1 will be implemented if condition if false -&gt; logic2 will be implemented
+
+In this example, we used both traditional `if-else` statements and the shorthand `ternary operator` to make a choice based on a condition and return a value. It is good practice to use the ternary operator when there is only one condition to be evaluated and a single value to be returned as it makes the code more concise and readable.
+
+### Objects
+
+Objects are a fundamental data structure in JavaScript, and they are used to store and organize data. *An object is a collection of key-value pairs, where each key is a string and each value can be of any type.*
+
+Here's an example of an object that represents a person:
+
+```javascript
+const person = {
+  name: "John",
+  age: 30,
+  isStudent: false
+};
+
+console.log(person.name); // "John"
+console.log(person["age"]); // 30
+```
+
+In this example, we define an object `person` that has three properties: `name`, `age`, and `isStudent`. We access the properties of the object using dot notation (e.g. [`person.name`](http://person.name)) or square bracket notation (e.g. `person["age"]`). We then log the value of the properties `name` and `age` to the console.
+
+### map, filter, and reduce
+
+map, filter, and reduce are three of the most commonly used higher-order functions in JavaScript for manipulating arrays.
+
+#### map
+
+The `map` the function is used to transform an array by applying a callback function to each element of the array. It creates a new array with the results of the callback function applied to each element of the original array.
+
+Here's an example of using the `map` function to double the values of an array of numbers:
+
+```javascript
+const numbers = [1, 2, 3, 4, 5];
+const doubledNumbers = numbers.map(x => x * 2);
+console.log(doubledNumbers); // [2, 4, 6, 8, 10]
+```
+
+In this example, we define an array `numbers` and then use the `map` function to double each value of the array by applying the callback function `x => x * 2`. The `map` the function returns a new array `doubledNumbers` containing the doubled values of the original array.
+
+#### filter
+
+The `filter` the function is used to filter an array based on a condition provided by a callback function. It creates a new array with the elements of the original array that pass the condition.
+
+Here's an example of using the `filter` function to select even numbers from an array of integers:
+
+```javascript
+const numbers = [1, 2, 3, 4, 5];
+const evenNumbers = numbers.filter(x => x % 2 === 0);
+console.log(evenNumbers); // [2, 4]
+```
+
+In this example, we define an array `numbers` and then use the `filter` function to select only even numbers by applying the callback function `x => x % 2 === 0`. The `filter` the function returns a new array `evenNumbers` containing the even numbers of the original array.
+
+#### reduce
+
+The `reduce` the function is used to reduce an array to a single value by applying a callback function to each element of the array. It takes two arguments, an accumulator and the current value of the array, and applies the callback function to them.
+
+Here's an example of using the `reduce` function to sum all the values of an array of numbers:
+
+```javascript
+const numbers = [1, 2, 3, 4, 5];
+const sum = numbers.reduce((acc, cur) => acc + cur);
+console.log(sum); // 15
+```
+
+In this example, we define an array `numbers` and then use the `reduce` function to sum all the values of the array by applying the callback function `(acc, cur) => acc + cur`. The `reduce` the function returns a single value `sum` which is the sum of all the values of the original array.
+
+> There are many situations where the map, filter and reduce can be used and it will increase the code quality and easier to understand the logic of the code.
+
+### Async, Await, Promises and Fetch
+
+Async-Await, Promises, and Fetch are all JavaScript features that are used to handle asynchronous operations, such as making network requests or a task that takes some time to get completed.
+
+They are especially useful when working with React as React components often need to retrieve and display data from a server.
+
+#### Async/Await:
+
+Async-await is a syntax that makes working with asynchronous code in JavaScript easier. It allows you to write asynchronous code that looks and behaves like synchronous code.
+
+Here's an example of using async-await to make a network request and retrieve data from an API:
+
+```javascript
+const getData = async () => {
+  const response = await fetch('https://jsonplaceholder.typicode.com/posts');
+  const data = await response.json();
+  console.log(data);
+}
+getData();
+```
+
+In this example, we define an async function `getData` that uses the `fetch` function to make a GET request to a specific endpoint.
+
+The `fetch` the function returns a promise that resolves with a response object. We then use the `await` keyword to wait for the promise to resolve, and then we use `response.json()` to parse the response body into a JSON object.
+
+Finally, we log the data to the console.
+
+> Here, the fetch method is an asynchronous function and it fetched response from API.
+> 
+> The `json()` method of the `Response` the object returns a promise that resolves with the parsed JSON data. Therefore it's an asynchronous task, which means that the JavaScript execution does not wait for it to finish before moving on to the next line of code.
+> 
+> For both asynchronouss tasks, await is used to wait for its completion.
+
+#### Promises:
+
+Promises are a JavaScript feature that allows you to write asynchronous code in a more structured and readable way.
+
+> A promise represents the eventual completion (or failure) of an asynchronous operation and its resulting value.
+
+Promises can be in one of three states: **pending**, **fulfilled**, or **rejected**.
+
+* When a promise is pending, it means the asynchronous operation is still in progress.
+    
+* When it's fulfilled, it means the operation has been completed successfully and the promise's value is available.
+    
+* When it's rejected, it means the operation failed and the promise's value is an error.
+    
+
+Here's an example of using Promises to make a network request and retrieve data from an API in React:
+
+```javascript
+const getData = () => {
+  return new Promise((resolve, reject) => {
+    fetch('https://jsonplaceholder.typicode.com/posts')
+    .then(response => response.json())
+    .then(data => resolve(data))
+    .catch(error => reject(error))
+  });
+}
+
+getData()
+  .then(data => console.log(data))
+  .catch(error => console.log(error))
+```
+
+In this example, we define a function `getData` that returns a new promise. Inside the promise, we use the `fetch` function to make a GET request to a specific endpoint, and then we use the `then` method to handle the response and resolve the promise with the data we got.
+
+If an error occurs, the `catch` the method will handle it and reject the promise with the error.
+
+You can also use `async/await` syntax with promises, like this:
+
+```javascript
+const getData = async () => {
+  try {
+    const response = await fetch('https://jsonplaceholder.typicode.com/posts');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+const data = await getData();
+console.log(data);
+```
+
+In this example, we define an async function `getData` that uses the `fetch` function to make a GET request to a specific endpoint. The `fetch` the function returns a promise that resolves with a response object.
+
+We then use the `await` keyword to wait for the promise to resolve, and then we use `response.json()` to parse the response body into a JSON object. Finally, we return the data.
+
+In summary, Promises, Async-await, and Fetch are all features in JavaScript that allow you to handle async operations such as making network requests in a more elegant and manageable way.
+
+They are essential when working with React, as most React applications need to retrieve and display data from a server.
+
+That's all about it!
+
+Thank you for reading! Please leave a like and ask any questions in the comments.

@@ -1,0 +1,106 @@
+---
+title: "React Tutorial - JSX, Components and Props"
+brief: "This blog gives you basic knowledge about JSX, Components and props."
+publishedAt: "2023-01-26T17:04:35.011Z"
+category: "React & Frontend"
+tags:
+  - "React & Frontend"
+  - "React"
+series:
+  name: "React Hands-On"
+  slug: "react-hands-on-series"
+coverImage:
+  url: "/content/articles/images/react-tutorial-jsx-components-and-props/cover.webp"
+---
+### **Requirements:**
+
+* Beginner with basic knowledge of HTML, CSS, and basic Javascript.
+    
+* Create the setup for react app by reading the [previous blog.](https://abhinandanmishra1.hashnode.dev/all-you-need-to-know-to-start-working-with-react)
+    
+
+### What is JSX?
+
+> JSX is a syntax extension for JavaScript that allows you to write HTML-like elements in your JavaScript code. It looks similar to HTML, but with a few key differences.
+> 
+> You need to use curly braces {} to include JavaScript expressions in JSX.
+
+JSX example:-
+
+```javascript
+const element = <h1>Hello, world!</h1>;
+
+or 
+
+const name = "Abhinandan"
+const element = <h1>{name}</h1>  // Here we have used the javascript variable inside our jsx component using {}.
+```
+
+Advantages:
+
+* We can write the html codes along with javascript implementations.
+    
+* It makes it easier to understand the code and can be easily manipulated.
+    
+
+### What are components?
+
+> Components are the building blocks of React Application.
+> 
+> Basically, in a react application everything can be created as a component and can be reused.  
+> It makes it easier to create reusable components and render them whenever required.
+> 
+> Components can be written as either `JavaScript Functions` or `JavaScript Classes` .
+
+Component Example:-  
+Let's create a simple `Welcome` Component that has `name` as input passed as a prop from the parent component.
+
+**Class-based component:**
+
+```javascript
+class Welcome extends React.Component {
+  render() {
+    return <h1>Hello, {this.props.name}</h1>;
+  }
+}
+```
+
+**Functional Component:**
+
+```javascript
+function Welcome(props) {
+  return <h1>Hello, {props.name}</h1>;
+}
+```
+
+### Props
+
+> In the above example, we've defined a component called "Welcome" that takes in a single prop called "name" and returns a JSX -&gt; **h1** element with the text "Hello, {name}".
+> 
+> Props (means properties) are the way that components receive data from their parent components. They are passed in as attributes on the JSX element for the component.
+
+#### Here's an example of how you might use the "Welcome" component from the previous example with some props:
+
+```javascript
+<Welcome name="Abhinandan" />
+```
+
+In this example, we're using the `Welcome` component and passing in a prop called "name" with the *value* **"Abhinandan"**. The component will then use that prop to render the JSX that it returns.
+
+#### Summary of the lesson:
+
+* JSX allows you to write HTML-like elements in your JavaScript code.
+    
+* Components are the building blocks of a React application and can be reused again and again.
+    
+* Props are the way that components receive data from their parent components and render the component dynamically based on the prop.
+    
+
+### Next Lessons :
+
+* You will get to know more about how to use CSS in React, use of ternary operator and Lists.
+    
+
+Till then, bye.
+
+Keep Learning and Upvote this article.

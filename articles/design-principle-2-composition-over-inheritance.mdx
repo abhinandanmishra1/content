@@ -1,0 +1,161 @@
+---
+title: "Design Principle #2: Composition Over Inheritance"
+brief: "Building flexible. maintainable and reusable systems"
+publishedAt: "2026-06-09T06:17:20.512Z"
+category: "Low Level Design"
+tags:
+  - "Low Level Design"
+series:
+  name: "Low Level Design"
+  slug: "low-level-design"
+coverImage:
+  url: "/content/articles/images/design-principle-2-composition-over-inheritance/cover.png"
+---
+This is one of the most important principles in modern software design and many design patterns are also based on it.
+
+Reusability of code is one of the main concerns while designing a system. Whenever we try to reuse code, we should make sure that the entities remain loosely coupled and highly cohesive.
+
+There are two common ways of reusing code:
+
+*   Inheritance
+    
+*   Composition
+    
+
+## Inheritance
+
+We all know what inheritance is. We create a base class and then use its properties and functionalities to create new classes with additional features and properties.
+
+Let's take an example of birds.
+
+```java
+class Bird {
+    void fly() {}
+}
+```
+
+Now Sparrow and Eagle can inherit from Bird.
+
+```java
+class Sparrow extends Bird {}
+
+class Eagle extends Bird {}
+```
+
+This looks perfectly fine because both birds can fly.
+
+Now suppose we want to add a Penguin.
+
+```java
+class Penguin extends Bird {}
+```
+
+The problem is that Penguin cannot fly.
+
+Since Penguin inherited from Bird, it automatically gets the `fly()` method even though it should not have that capability.
+
+As the system grows, we start adding more types of birds and more capabilities. Soon we end up with a hierarchy that becomes difficult to maintain.
+
+This is one of the common problems with inheritance. A child class gets everything from the parent even when some of those things are not applicable.
+
+## Composition
+
+Instead of inheriting capabilities, we can compose objects using smaller reusable components.
+
+First, let's define behaviors.
+
+```java
+interface FlyBehavior {
+    void fly();
+}
+
+class CanFly implements FlyBehavior {
+    public void fly() {
+        System.out.println("Flying");
+    }
+}
+
+class CannotFly implements FlyBehavior {
+    public void fly() {
+        System.out.println("Cannot Fly");
+    }
+}
+```
+
+Now our birds can use these behaviors.
+
+```java
+class Bird {
+    FlyBehavior flyBehavior;
+}
+```
+
+Sparrow can have flying behavior.
+
+```java
+class Sparrow extends Bird {
+    Sparrow() {
+        flyBehavior = new CanFly();
+    }
+}
+```
+
+Penguin can have non-flying behavior.
+
+```java
+class Penguin extends Bird {
+    Penguin() {
+        flyBehavior = new CannotFly();
+    }
+}
+```
+
+Now every bird gets only the behavior it actually needs.
+
+Instead of saying:
+
+> Penguin IS-A Bird that can fly
+
+we are saying:
+
+> Penguin HAS-A flying behavior.
+
+This is called composition.
+
+## Why Composition is Preferred?
+
+With inheritance:
+
+```text
+Bird
+ ├── Sparrow
+ ├── Eagle
+ ├── Penguin
+```
+
+As new requirements come, the hierarchy keeps growing.
+
+With composition:
+
+```text
+Bird
+   |
+   +---- FlyBehavior
+```
+
+We can simply plug in different behaviors whenever required.
+
+This makes the system:
+
+*   More flexible
+    
+*   Easier to extend
+    
+*   Easier to maintain
+    
+*   Less tightly coupled
+    
+
+This is why modern software design generally prefers:
+
+> Favor Composition Over Inheritance

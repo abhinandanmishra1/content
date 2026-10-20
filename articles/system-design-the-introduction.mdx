@@ -1,0 +1,83 @@
+---
+title: "System Design - The Introduction"
+brief: "Crafting the Blueprint: An Introduction to System Design"
+publishedAt: "2024-12-15T06:19:35.957Z"
+category: "System Design"
+tags:
+  - "System Design"
+series:
+  name: "System Design"
+  slug: "system-design"
+coverImage:
+  url: "/content/articles/images/system-design-the-introduction/cover.png"
+---
+In this article, we will initialize ourselves by understanding the reason for designing systems, what the system is, what the system design is, and more.
+
+## What is System Design?
+
+---
+
+System design is the process of defining a **set of requirements** to solve a specific problem by creating a software application or product that serves as the solution to that problem.
+
+In simpler terms, when faced with a real-world problem, you need to devise a solution (e.g., software). The process of identifying and organizing the requirements for creating this solution is referred to as system design.
+
+**Example:**
+
+Before Facebook, connecting with anyone worldwide was a challenging task. This was the problem. To create the solution **Facebook,** Mark Zuckerberg identified key requirements: allowing users to create accounts, send messages, add friends, and more. These features were part of the system design that made Facebook a successful solution to the problem of global connectivity.
+
+> Why system design is so popular and important?
+> 
+> *Every single “product” in the tech world is a system that has been designed to solve a real world problem. Companies are building products and need the skilled engineer who can design those products.*
+
+## What do engineers do while designing a system?
+
+---
+
+Let’s take the example of designing a **Food Delivery App** to explain each step of the system design process:
+
+1. **Break Down the Problem:**  
+    The primary problem (building a food delivery app) is divided into smaller, solvable sub-problems.
+    
+    * User onboarding and account management
+        
+    * Restaurant listing and search functionality
+        
+    * Order placement and checkout
+        
+    * Delivery tracking system
+        
+    * Payment gateway integration
+        
+2. **Identify Key Components and Their Responsibilities:**  
+    For each sub-problem, engineers identify the core components and their roles.
+    
+    * **User Management Service**: Handles user registration, login, and profile management.
+        
+    * **Restaurant Service**: Manages restaurant data, menus, and reviews.
+        
+    * **Order Service**: Processes and tracks orders.
+        
+    * **Delivery Service**: Manages delivery partner assignments and real-time location tracking.
+        
+    * **Payment Service**: Handles secure payment processing and refunds.
+        
+3. **Define the Boundaries of Components:**  
+    Each component should work independently, ensuring loose coupling. For instance:
+    
+    * The **Restaurant Service** should operate independently of the **User Management Service**.
+        
+    * If the **Delivery Service** faces downtime, it shouldn’t impact the functionality of placing an order.  
+        This ensures modularity and makes the system easier to scale and maintain.
+        
+4. **Consider Scalability and Fault Tolerance:**  
+    Engineers plan for scaling individual sub-problems to handle a larger user base and ensure high availability.
+    
+    * **Scalability**: Use a load balancer for the **Order Service** to distribute traffic during peak hours.
+        
+    * **Fault Tolerance**: Implement database replication for the **Payment Service** to avoid downtime during failures.
+        
+5. **Merge Sub-Solutions into the Final Solution:**  
+    Once the individual components are designed and implemented, they are integrated to create the complete system.
+    
+
+That's all for this article. In the next article, we’ll understand the approach to designing a system.

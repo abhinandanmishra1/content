@@ -1,0 +1,304 @@
+---
+title: "Design Patterns #2: Factory Pattern"
+brief: "While learning strategy pattern one question should have come to your mind: Who is responsible for creating this strategy object? Because if there are a…"
+publishedAt: "2026-06-12T14:32:52.320Z"
+category: "Low Level Design"
+tags:
+  - "Low Level Design"
+  - "Design Patterns"
+  - "Architecture"
+series:
+  name: "Low Level Design"
+  slug: "low-level-design"
+coverImage:
+  url: "/content/articles/images/design-patterns-2-factory-pattern/cover.png"
+---
+While learning strategy pattern one question should have come to your mind:
+
+```java
+PaymentStrategy paymentStrategy = new UpiPaymentStrategy();
+```
+
+Who is responsible for creating this strategy object?
+
+Because if there are a lot of strategies likes Card payment, Upi payment, Net banking payment, Wallet Payment and Crypto Payment, it will become very hard to manage the creation of all these strategy objects because if we again add if-else in then it will again create the same chaining problem and that will be hard to maintain and test.
+
+This is the problem that Factory Pattern solves.
+
+## Problem
+
+Earlier we created following classes in Strategy Pattern:
+
+```java
+interface PaymentStrategy {
+    void pay(double amount);
+}
+
+class CardPaymentStrategy implements PaymentStrategy {
+    public void pay(double amount) {
+        System.out.printf("Paid %d using Card", amount);
+    }
+}
+
+class UpiPaymentStrategy implements PaymentStrategy {
+    public void pay(double amount) {
+        System.out.printf("Paid %d using UPI", amount);
+    }
+}
+
+class NetBankingPaymentStrategy implements PaymentStrategy {
+    public void pay(double amount) {
+        System.out.printf("Paid %d using Netbanking", amount);
+    }
+}
+
+class PaymentService {
+    private PaymentStrategy paymentStrategy;
+
+    PaymentService(PaymentStrategy paymentStrategy) {
+        this.paymentStrategy = paymentStrategy;
+    }
+
+    void processPayment(double amount) {
+        paymentStrategy.pay(amount);
+    }
+}
+```
+
+Now, ideally this `PaymentService` would be used by a `PaymentController` in a backend application.
+
+A straightforward implementation might look like this:
+
+```java
+class PaymentController {
+
+    void createPayment(
+        String paymentType,
+        double amount
+    ) {
+
+        PaymentService paymentService;
+
+        if(paymentType.equals("UPI")) {
+            paymentService =
+                new PaymentService(
+                    new UpiPaymentStrategy()
+                );
+        }
+
+        else if(paymentType.equals("CARD")) {
+            paymentService =
+                new PaymentService(
+                    new CardPaymentStrategy()
+                );
+        }
+
+        else if(paymentType.equals("NET_BANKING")) {
+            paymentService =
+                new PaymentService(
+                    new NetBankingPaymentStrategy()
+                );
+        }
+
+        paymentService.processPayment(amount);
+    }
+}
+```
+
+Although we successfully removed the large `if-else` chain from `PaymentService`, we have now moved the same problem to `PaymentController`.
+
+Whenever a new payment method is introduced, such as:
+
+*   Wallet Payment
+    
+*   Crypto Payment
+    
+*   EMI Payment
+    
+
+we again need to modify the controller and add another `if-else` block.
+
+This means the object creation logic is now scattered in the application and will become difficult to maintain as the number of payment strategies increases.
+
+The main problem here is:
+
+> Who should be responsible for creating the correct strategy object?
+
+Instead of letting the controller know about every possible payment strategy, we can delegate this responsibility to a separate class whose only responsibility is creating payment strategy objects.
+
+This is exactly what the Factory Pattern solves.
+
+## What is Factory Pattern?
+
+Factory Pattern is a creational design pattern that delegates object creation to a separate class.
+
+In simple words:
+
+> Instead of creating objects yourself, ask a factory to create them.
+
+Now let's create a factory responsible for creating the correct payment strategy.
+
+```java
+class PaymentStrategyFactory {
+
+    static PaymentStrategy getStrategy(
+        String paymentType
+    ) {
+
+        if(paymentType.equals("UPI")) {
+            return new UpiPaymentStrategy();
+        }
+
+        if(paymentType.equals("CARD")) {
+            return new CardPaymentStrategy();
+        }
+
+        if(paymentType.equals("NET_BANKING")) {
+            return new NetBankingPaymentStrategy();
+        }
+
+        throw new IllegalArgumentException(
+            "Invalid Payment Type"
+        );
+    }
+}
+```
+
+Now our controller becomes:
+
+```java
+class PaymentController {
+
+    void createPayment(
+        String paymentType,
+        double amount
+    ) {
+
+        PaymentStrategy paymentStrategy =
+            PaymentStrategyFactory
+                .getStrategy(paymentType);
+
+        PaymentService paymentService =
+            new PaymentService(
+                paymentStrategy
+            );
+
+        paymentService.processPayment(amount);
+    }
+}
+```
+
+## What Improved?
+
+Earlier, `PaymentController` was responsible for:
+
+*   Receiving the request
+    
+*   Deciding which strategy to use
+    
+*   Creating the strategy object
+    
+*   Processing the payment
+    
+
+Now the controller only needs to:
+
+*   Receive the request
+    
+*   Ask the factory for the correct strategy
+    
+*   Process the payment
+    
+
+The responsibility of creating payment strategies has been moved to `PaymentStrategyFactory`.
+
+This follows the Single Responsibility Principle because object creation is now centralized in one place.
+
+## Why is this Better?
+
+Suppose tomorrow the business introduces:
+
+*   Wallet Payment
+    
+*   Crypto Payment
+    
+*   EMI Payment
+    
+
+Without a factory, we would need to update every place where payment strategies are created.
+
+With a factory, we only need to update:
+
+```java
+PaymentStrategyFactory
+```
+
+and the rest of the application remains unchanged.
+
+This makes the code easier to maintain and understand.
+
+## Factory Pattern + Strategy Pattern
+
+One interesting thing to notice is that Factory Pattern and Strategy Pattern are often used together.
+
+Strategy Pattern solves:
+
+> How should the payment be processed?
+
+Factory Pattern solves:
+
+> Who should create the payment strategy object?
+
+So the complete flow becomes:
+
+```text
+PaymentController
+        |
+        v
+PaymentStrategyFactory
+        |
+        v
+PaymentStrategy
+        |
+        v
+PaymentService
+```
+
+The factory creates the strategy and the service executes the strategy.
+
+> One thing you might have noticed i created factory for Strategy and then used correct strategy for payment service. So, always factory is created for the class that has multiple implementations.
+
+## Drawback
+
+Although Factory Pattern improves code organization, the factory itself still contains an `if-else` chain.
+
+```java
+if(paymentType.equals("UPI"))
+if(paymentType.equals("CARD"))
+if(paymentType.equals("NET_BANKING"))
+```
+
+Whenever a new payment method is introduced, we still need to modify the factory.
+
+So Factory Pattern does not completely eliminate modifications. It simply centralizes object creation into a single place, making the code easier to maintain.
+
+In future articles, we will see more advanced factory implementations that reduce these modifications even further.
+
+## What's Next?
+
+In the next article, I will learn the Observer Pattern.
+
+Observer Pattern is one of the most commonly used patterns in modern software systems and is heavily used in:
+
+*   React state updates
+    
+*   Event listeners
+    
+*   Notification systems
+    
+*   Kafka consumers
+    
+*   WebSockets
+    
+
+Let's continue the journey 🚀

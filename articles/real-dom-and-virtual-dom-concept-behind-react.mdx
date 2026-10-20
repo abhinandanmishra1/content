@@ -1,0 +1,129 @@
+---
+title: "Real DOM and Virtual DOM - Concept behind React"
+brief: "Why React is very fast and efficient instead to other frameworks or vanilla javascript?"
+publishedAt: "2023-02-03T07:31:23.332Z"
+category: "React & Frontend"
+tags: ["React", "JavaScript", "Virtual DOM", "Frontend"]
+coverImage:
+  url: "/content/articles/images/real-dom-and-virtual-dom-concept-behind-react/cover.webp"
+---
+
+# Real DOM and Virtual DOM - Concept behind React
+
+### What is Real DOM or DOM?
+
+DOM refers to Document Object Model and it is a tree data structure that represents the HTML document and nodes of the tree are HTML tags or elements in the document.
+
+<mark>DOM is an abstraction of the</mark> **<mark>HTML</mark>** <mark>of web pages.</mark>
+
+> **Who Creates this document object?**
+> 
+> The browser creates the Document Object Model (DOM) when it receives an HTML document from a server in response to a user's request for a web page. The browser parses the HTML document and creates a tree-like structure, known as the DOM, to represent the content and structure of the web page.
+> 
+> This DOM can then be manipulated by JavaScript and other scripting languages to provide dynamic and interactive functionality on the web page.
+
+Here's an example of a basic html file and its representation in the DOM tree:
+
+```xml
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>My HTML Page</title>
+</head>
+<body>
+  <h1> heading </h1>
+  <p> paragraph </p>
+  <div>
+    Div content
+  </div>
+</body>
+</html>
+```
+
+> **DOM Tree Representation**
+> 
+> ![Illustration 1](/content/articles/images/real-dom-and-virtual-dom-concept-behind-react/inline-image-1.png)
+
+### The inefficiency of DOM and the concept of Virtual DOM
+
+The DOM was created for web pages that don't require updates. When the DOM updates, it updates each node and redraws the page with its corresponding CSS and layout. This can be slow, especially when dealing with large numbers of nodes.
+
+Let's say we have a list of books:
+
+```javascript
+let books = [
+  { title: 'The Great Gatsby', author: 'F. Scott Fitzgerald' },
+  { title: 'To Kill a Mockingbird', author: 'Harper Lee' },
+  { title: 'Pride and Prejudice', author: 'Jane Austen' }
+]
+```
+
+If we want to update the list to change the author of 'To Kill a Mockingbird' from 'Harper Lee' to 'Nelle Harper Lee', we have to create a whole new array:
+
+```javascript
+let books = [
+  { title: 'The Great Gatsby', author: 'F. Scott Fitzgerald' },
+  { title: 'To Kill a Mockingbird', author: 'Nelle Harper Lee' },
+  { title: 'Pride and Prejudice', author: 'Jane Austen' }
+]
+```
+
+More efficiently, we could simply update the single element in the array:
+
+```javascript
+books[1].author = 'Nelle Harper Lee'
+```
+
+However, in Single-Page Applications (SPAs), it's common to have thousands of elements like books. Redrawing the entire page for each change can be slow and affect the user experience.
+
+To solve this problem, it's better to only update the elements that have changed, leaving the rest of the page as-is. This is the **concept behind the virtual DOM in React.**
+
+### Virtual DOM
+
+<mark>The Virtual DOM is an abstraction of the </mark> **<mark>real DOM</mark>**. That means it is an abstraction of abstraction ( because DOM is also an abstraction of **HTML** ).
+
+It's a lightweight copy of the real DOM. Lightweight means it has lesser properties than real DOM. It has all the same properties as the real DOM object but can’t write to the screen like the real DOM.
+
+Because virtual DOM is lightweight, it is fast and efficient and on every re-render, a new virtual DOM is created.
+
+> **Reconciliation** is a process to compare and keep in sync the two files (Real and Virtual DOM).
+> 
+> **Diffing algorithm** is a technique of reconciliation that is used by React.
+
+### How does update work in React?
+
+* **Initial Render**: During the initial render, React creates a Virtual DOM—a lightweight copy of the actual DOM. The real DOM is then created and rendered to the screen using `ReactDOM.render()`.
+    
+* **Event Handling and State Changes**: When an event occurs (such as a key press or an API response), it may trigger a state change in a React component. The component's state and/or props are updated accordingly.
+    
+* **Re-rendering Virtual DOM**: When the state or props change, React re-renders the affected components by generating a new Virtual DOM. This new Virtual DOM is then compared with the previous version.
+    
+* **Diffing Algorithm**: React uses a **Diffing Algorithm** (also known as the Reconciliation process) *to compare the* ***new Virtual DOM*** *with the* ***previous Virtual DOM***. React identifies the differences (or "diffs") between the two.
+    
+* **Updating the Real DOM**: After identifying the differences, React updates only the specific parts of the real DOM that have changed. This selective update ensures that the real DOM is modified as efficiently as possible.
+    
+* **Repainting the Screen**: Once the real DOM is updated, the browser repaints the screen, reflecting the latest changes for the user.
+    
+
+Let's understand how only one component is updating by an example:
+
+%[https://codesandbox.io/s/virtual-dom-vs-real-dom-47u8fw?file=/src/App.js] 
+
+The code contains an **input** element and a **div** that displays the {count} variable.
+
+The div updates every second, but the whole **App** component does not change because if it gets changed then the text inside the input field must be cleared on every render.
+
+This efficiency and smoothness are achieved by the use of Virtual DOM, by updating the Real DOM where change is required.
+
+> **Why key prop is required for list elements in react?**
+> 
+> When using React to render a list of items, it's important to give each item a unique "key" property. This is because React's Virtual DOM uses the key to keep track of every item in the list during the process of updating the real DOM.
+> 
+> The key helps React know which items have been added, removed, or moved in the list, which makes it easier and faster to update only the necessary parts of the real DOM. If the key is not provided, React will have a harder time determining which elements have changed, which can slow down the updating process and potentially impact performance.
+> 
+> So, to ensure optimal performance, it's always recommended to include a unique key for each item in a list when using React. Although it's possible to render the list without the key, the performance may not be as good.
+
+That's all about Virtual DOM and the concept behind React.
+
+Thanks for reading the article, please upvote!

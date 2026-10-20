@@ -1,0 +1,232 @@
+---
+title: "JavaScript Promises: A Journey from Callbacks to Custom Implementation"
+brief: "Before the introduction of promises in JavaScript, handling asynchronous operations was a cumbersome and error-prone process. Developers relied heavily on…"
+publishedAt: "2024-08-23T06:11:45.680Z"
+category: "JavaScript & Frontend"
+tags:
+  - "JavaScript & Frontend"
+  - "JavaScript"
+  - "Async"
+  - "Event Loop"
+series:
+  name: "JavaScript Deep Dive"
+  slug: "javascript"
+coverImage:
+  url: "/content/articles/images/javascript-promises-a-journey-from-callbacks-to-custom-implementation/cover.png"
+---
+## How Life Was Before Promises?
+
+Before the introduction of promises in JavaScript, handling asynchronous operations was a cumbersome and error-prone process. Developers relied heavily on callbacks, which often led to "callback hell" or "pyramid of doom," where nested callbacks became difficult to manage and read. This made the code harder to maintain and debug, especially as the complexity of the application grew.
+
+For example, consider the following scenario: You need to perform three asynchronous operations sequentially. In the callback-based approach, you'd end up nesting the functions, leading to deeply indented code that's difficult to follow.
+
+```javascript
+asyncOperation1(function(result1) {
+    asyncOperation2(result1, function(result2) {
+        asyncOperation3(result2, function(result3) {
+            console.log('Final result:', result3);
+        });
+    });
+});
+```
+
+This pattern not only makes the code harder to read but also complicates error handling since each callback needs to manage its own errors.
+
+## Why do Promises Come to JavaScript?
+
+Promises were introduced in JavaScript to solve the problems associated with callback-based asynchronous programming. **A promise represents a value that may be available now, or in the future, or never.** It allows you to chain asynchronous operations in a more readable and maintainable way, avoiding deeply nested callbacks.
+
+Promises provide a clean way to handle asynchronous tasks, making the code easier to write, read, and maintain. They also offer a unified approach to error handling, allowing errors to be caught at a single point in the chain.
+
+## How Promises Made Life Easier: An Example
+
+With promises, the previous example can be rewritten as follows:
+
+```javascript
+asyncOperation1()
+    .then(result1 => asyncOperation2(result1))
+    .then(result2 => asyncOperation3(result2))
+    .then(result3 => {
+        console.log('Final result:', result3);
+    })
+    .catch(error => {
+        console.error('Error occurred:', error);
+    });
+```
+
+In this example, the code is linear and easy to follow. Each `then` block handles the result of the previous operation, and the `catch` block handles any errors that occur during any of the asynchronous operations.
+
+## How Promises Use Callbacks Under the Hood
+
+Despite their clean syntax, promises are essentially a wrapper around callbacks. When you create a promise, you pass an executor function to it, which receives two arguments: `resolve` and `reject`. These functions are callbacks that the promise uses to transition from a pending state to either a fulfilled or rejected state.
+
+Under the hood, promises manage the state and the callback queue. When a promise is fulfilled or rejected, it processes the queued callbacks and passes the resolved value or error to them.
+
+## Implementation of JavaScript Promises
+
+Here's a custom implementation of JavaScript promises using a class named `Promise2`. This implementation illustrates how promises manage state, handle callbacks, and provide a chainable interface.
+
+```javascript
+class Promise2 {
+  constructor(executor) {
+    this.status = "pending"; // "pending", "fulfilled", "rejected"
+    this.value = undefined;
+    this.queue = []; // Queue for both fulfilled and rejected callbacks
+
+    this.resolve = this.#resolve.bind(this);
+    this.reject = this.#reject.bind(this);
+    
+    setTimeout(() => {
+      // executor will be called when all the callbacks get added
+      executor(this.resolve, this.reject);
+    }, 0);
+  }
+
+  then(onFulfilled) {
+    this.queue.push({ type: "then", callback: onFulfilled });
+    return this;
+  }
+
+  catch(onRejected) {
+    this.queue.push({ type: "catch", callback: onRejected });
+    return this;
+  }
+
+  finally(onFinally) {
+    this.queue.push({ type: "finally", callback: onFinally });
+  }
+
+  #resolve(data) {
+    if (this.status !== "pending") return; // Ensure the promise isn't resolved/rejected more than once
+    this.status = "fulfilled";
+    this.value = data;
+    this.#processQueue();
+  }
+
+  #reject(error) {
+    if (this.status !== "pending") return; // Ensure the promise isn't resolved/rejected more than once
+    this.status = "rejected";
+    this.value = error;
+    this.#processQueue();
+  }
+
+  #processQueue() {
+    console.log(this.queue.length);
+    while (this.queue.length > 0) {
+      const { type, callback } = this.queue.shift();
+
+      try {
+        if (type === "then" && this.status === "fulfilled") {
+          this.value = callback(this.value);
+        } else if (type === "catch" && this.status === "rejected") {
+          this.value = callback(this.value);
+          this.status = "fulfilled"; // Reset to allow further .then calls to continue
+        } else if (type === "finally") {
+          callback(); // Finally callback is called regardless of the outcome
+        }
+      } catch (error) {
+        this.status = "rejected";
+        this.value = error;
+      }
+    }
+  }
+}
+```
+
+### Usage Example
+
+```javascript
+new Promise2((resolve, reject) => {
+  console.log("Fetching user data...");
+  const success = Math.random() > 0.3; // It can be either success or failure
+  if (success) {
+    resolve({ userId: 1, username: "john_doe" });
+  } else {
+    reject("Failed to fetch user data.");
+  }
+})
+  .then((userData) => {
+    console.log("User data fetched:", userData);
+    console.log("Fetching user's order history...");
+    const success = Math.random() > 0.3;
+    if (success) {
+      return [
+        { orderId: 101, product: "Laptop" },
+        { orderId: 102, product: "Smartphone" },
+      ];
+    } else {
+      throw new Error("Failed to fetch order history.");
+    }
+  })
+  .then((orderHistory) => {
+    console.log("Order history fetched:", orderHistory);
+  })
+  .catch((error) => {
+    console.error("Error:", error);
+  })
+  .finally(() => {
+    console.log("Operation completed.");
+  });
+```
+
+This implementation demonstrates the basics of how promises work in JavaScript. The `Promise2` the class manages the state of the promise, queues callbacks, and processes them when the promise is fulfilled or rejected.
+
+## Implementing the Fetch function using Promise2
+
+The `fetch` function is a modern JavaScript API for making HTTP requests. It is used to request resources from a network server and handle responses.
+
+In the implementation of `fetch2`, we require a library for making HTTP requests and the fetch function returns a `Promise2` object that is in `pending` state until the request is either `rejected` or `fulfilled`.
+
+```javascript
+const Promise2 = require("./Promise");
+const https = require("https");
+
+function fetch2(url, options = {}) {
+  return new Promise((resolve, reject) => {
+    https
+      .get(url, (response) => {
+        let data = "";
+
+        response.on("data", (chunk) => {
+          data += chunk;
+        });
+
+        response.on("end", () => {
+          resolve(data);
+        });
+      })
+      .on("error", (err) => {
+        reject(err);
+      });
+  });
+}
+```
+
+### Fetch2 usage example
+
+```javascript
+fetch2("https://jsonplaceholder.typicode.com/posts", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    title: "foo",
+    body: "bar",
+    userId: 1,
+  }),
+})
+  .then((response) => {
+    console.log("Success:", response);
+  })
+  .catch((error) => {
+    console.error("Error:", error.message);
+  })
+  .finally(() => {
+    console.log("Request completed");
+  });
+```
+
+This concludes the article, where we explored the concept of promises, examined how they function internally and gained insights into how `fetch` operates under the hood.
+
+[Read it on Linkedin](https://www.linkedin.com/pulse/javascript-promises-journey-from-callbacks-custom-abhinandan-mishra-9lnsc/)

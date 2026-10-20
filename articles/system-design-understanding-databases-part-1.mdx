@@ -1,0 +1,254 @@
+---
+title: "System Design - Understanding Databases - Part 1"
+brief: "Mastering Databases: The Backbone of System Design"
+publishedAt: "2024-12-22T06:44:07.591Z"
+category: "System Design"
+tags:
+  - "System Design"
+  - "Databases"
+  - "PostgreSQL"
+  - "MySQL"
+series:
+  name: "System Design"
+  slug: "system-design"
+coverImage:
+  url: "/content/articles/images/system-design-understanding-databases-part-1/cover.png"
+---
+This article and the upcoming ones in this series will focus on databases. *Databases are the most critical component of any system—they either make or break it*. Understanding the unique features of each database type is essential for selecting the best one for a given use case. Since no single database fits all use cases, it's important to understand their differences and use them according to specific problem requirements.
+
+## Relational databases
+
+In a relational database, data is stored in rows and columns.
+
+> **Relational databases were initially designed to handle accounting and financial applications. Since before databases, account data was stored in ledgers with rows and columns format, the same structure was adopted for relational databases.**
+
+As relational databases were built to support accounting, they have the following properties:
+
+1. Data consistency
+    
+2. Data durability
+    
+3. Data integrity
+    
+4. Constraints
+    
+5. Everything in one place
+    
+
+Also, since accounting involves `transactions`, relational databases support transactions which we will understand later in this article.
+
+## Understanding ACID properties
+
+### What is ACID?
+
+ACID stands for Atomicity, Consistency, Isolation, and Durability. These are critical properties of databases for maintaining integrity and reliability, especially during concurrent transactions or system failures.
+
+Let's understand the role and importance of each property.
+
+### Atomicity
+
+Atomicity is the property that ensures a transaction either happens successfully or doesn't happen at all—there's no middle ground.
+
+> A transaction is an indivisible unit of operations performed on a database. Logically, it's a single unit of work—for example, money being transferred from one bank account to another or an email being sent to a receiver.
+
+In simple terms, a transaction is an abstraction of multiple logical operations done on a database. For example: Vinay transferred $500 to Ekansh (it's a transaction). Let's see what it looks like internally.
+
+**Initial Balances**
+
+![Illustration 1](/content/articles/images/system-design-understanding-databases-part-1/inline-image-1.png)
+
+**Transaction Process:**
+
+![Illustration 2](/content/articles/images/system-design-understanding-databases-part-1/inline-image-2.png)
+
+**Final balances:**
+
+![Illustration 3](/content/articles/images/system-design-understanding-databases-part-1/inline-image-3.png)
+
+In the transaction process, there are multiple read and write operations from the database, but we combine all these steps and call it a **transaction** (*an abstracted unit operation of multiple operations*). If at any point some operation of the transaction fails, all previous operations get rolled back. That is, if Vinay's money got debited but the transaction fails after that, then the database rolls back the previous operation of decreasing Vinay's money, and Vinay doesn't see any change in the balance. This "all or nothing" property of database operations is known as atomicity.
+
+#### Other Examples of Atomicity
+
+1. **Social Media Platform application**
+    
+    * When a user creates a post with multiple photos, the transaction will have the following operations
+        
+        * Upload all photos
+            
+        * Create metadata of the post that will have all details about the post like, photosIds or URLs(if uploaded on CDN), content of the photos, people tagged in the photo
+            
+        * Update the user’s post count in the user’s table
+            
+    * Now above all operations belong to a single transaction of creating a post and either all operations get complete or none of them otherwise there would be inconsistency of data.
+        
+2. **E**\-**commerce platform application**
+    
+    * When a user orders an item, the transaction will have the following operations
+        
+        * Check item availability and whether the requested quantity is available
+            
+        * Reduce the item count by the number of quantity purchases by users
+            
+        * Process payment for the calculated price
+            
+        * Create an order record with details like Item details, quantity, price, buyerId, sellerId, and payment status.
+            
+
+### Consistency
+
+When discussing database consistency, the classic example of bank transactions often comes up—ensuring that when money moves from one account to another, the total remains unchanged. In our case, before the transfer, the total money was $5000 (Vinay's money) + $400 (Ekansh's money) = $5400, and after the transaction, the total remained $4500 (Vinay's Money) + $900 (Ekansh's money) = $5400.
+
+However, consistency in databases extends well beyond simple numerical balance. Let's examine different scenarios with real-world examples.
+
+> Consistency simply means the initial state of the database must be logically equal to the final state, and relationships between different entities must remain valid.
+
+#### Other scenarios of consistency
+
+1. **Social media scenario**
+    
+    * After the transaction of creating a post by a user on the social media platform
+        
+        * If the user has uploaded photos in the post then photos must get uploaded on the database or cdn and the attached URLs or photoId of photos must be valid
+            
+        * People tagged on the post must be present in the user’s table
+            
+        * The location mentioned in the post must be valid in the database
+            
+        * The number of counts of the posts of the user must be increased by one
+            
+    * If any of the above scenarios fail, consistency will be broken, but the database ensures that if any of the constraints fail, it will not commit that transaction.
+        
+2. **E**\-**commerce platform**
+    
+    * After the transaction of buying some items from the store
+        
+        * The order history of the user should be updated.
+            
+        * The count of items should be decreased at the seller’s side by the quantity bought by the user.
+            
+        * The seller’s earnings should be increased
+            
+    * These are the cases that must be followed in the system to avoid inconsistency.
+        
+
+#### Why Consistency Matters
+
+Without proper consistency:
+
+1. Users lose trust in your system
+    
+2. Data becomes unreliable and potentially meaningless
+    
+3. Business logic breaks down
+    
+4. System behavior becomes unpredictable
+    
+
+#### Implementing Consistency
+
+To maintain consistency in your database:
+
+1. Define clear business rules upfront
+    
+2. Implement proper database constraints
+    
+3. Use transactions for related operations
+    
+4. Validate data at both application and database levels
+    
+5. Regularly audit data integrity
+    
+
+> Consistency should be maintained at both business and database sides.
+
+### Isolation
+
+Isolation means separating the changes of concurrent transactions. The database has isolation levels that define how many changes you want to isolate between concurrent transactions.
+
+We will explore isolation levels in detail in the upcoming article with practical implementations.
+
+Let’s understand now with real-world examples:
+
+1. **Social Media Platform**
+    
+    * Multiple users click on the like button concurrently
+        
+        * Without Proper Isolation:
+            
+            * Imagine a post has 50 likes and three users (User1, User2, User3) click like at nearly the same time:
+                
+                1. Each user's request reads the current count: 50
+                    
+                2. Each request tries to increment: 50 + 1
+                    
+                3. Result: Count becomes 51 instead of the correct 53
+                    
+        * How isolation solves this:
+            
+            * Isolation makes the update in the database's like counts remain consistent. The number of people who liked should be the same as the number of people who liked; no data should be missed.
+                
+            * One way to do this is to solve this issue is to use locking the likecount variable from the update if any operation is happening on it.
+                
+            * A better approach for this is using message queues like Kafka to add the `Like Event` and updating the count of likes in a cache like `Redis` and atomic operations like [INCR](https://redis.io/docs/latest/commands/incr) and [DECR](https://redis.io/docs/latest/commands/decr/).
+                
+2. **E**\-**commerce Platform**
+    
+    * Multiple users trying to buy an iPhone 15 during a big billion-day sale
+        
+        * There are 10 available items in the store and 100 people click to buy
+            
+        * Without proper isolation:
+            
+            * Multiple users might start the payment process simultaneously
+                
+            * Some users might receive order confirmation even when stock is depleted
+                
+            * This could lead to overselling and customer dissatisfaction
+                
+        * How isolation solves this:
+            
+            * Locks inventory check and update as one atomic operation
+                
+            * Verifies availability before initiating payment
+                
+            * Ensures other users see updated stock count
+                
+            * Prevents payment initiation if the stock quantity becomes zero
+                
+
+### Durability
+
+Durability property guarantees that once the transaction is committed, its changes are permanent in the database or in the subsequent database(replicas) irrespective of any system failure, geographical causes, crashes, or any other happening).
+
+> Durabillity is like craving data into stone, and it stays till the stone stays.
+
+#### How durability is achieved?
+
+Some of the ways of maintaining durability as follows:
+
+1. **Redundancy**
+    
+    * Multiple copies of data across different storage devices
+        
+    * Replica servers in different locations
+        
+    * Regular backup systems with multiple retention periods
+        
+    * Synchronous and asynchronous replication strategies
+        
+2. **Recovery Mechanisms**
+    
+    * Point-in-Time Recovery capabilities
+        
+    * Transaction log replay for crash recovery
+        
+3. **Geographical Distribution**
+    
+    * Data centers in different regions
+        
+    * Cross-continental replication
+        
+    * Protection against natural disasters
+        
+
+That's all for the context of this article. In the upcoming articles, we will explore databases further before we start building our system.

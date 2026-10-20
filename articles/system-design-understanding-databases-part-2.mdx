@@ -1,0 +1,328 @@
+---
+title: "System Design - Understanding Databases - Part 2"
+brief: "This article explains the isolation property of ACID properties by demonstrating each isolation level practically."
+publishedAt: "2024-12-29T02:57:13.008Z"
+category: "System Design"
+tags:
+  - "System Design"
+  - "Databases"
+  - "PostgreSQL"
+  - "MySQL"
+series:
+  name: "System Design"
+  slug: "system-design"
+coverImage:
+  url: "/content/articles/images/system-design-understanding-databases-part-2/cover.png"
+---
+## What is Isolation?
+
+Database isolation is one of the four key ACID properties (Atomicity, Consistency, Isolation, Durability). Isolation ensures that concurrent transactions operate independently, making it appear as if each transaction is the only one executing in the database at any given time. In other words, isolation prevents transactions from interfering with each other even when they're running simultaneously.
+
+## **Why do we need isolation?**
+
+Consider a real-world scenario: You're implementing a system for a large e-commerce platform where:
+
+* Multiple customers are trying to purchase the same products simultaneously
+    
+* Price updates are happening in real-time
+    
+* New inventory is being added to the system
+    
+* Order processing occurs continuously
+    
+
+Each of these operations runs as a database transaction. Without proper isolation, these concurrent transactions could interfere with each other, leading to data inconsistencies. Isolation controls:
+
+1. The type of locks acquired when data is read
+    
+2. The duration for which these locks are held
+    
+3. How transactions handle rows modified by other transactions:
+    
+    * Either by waiting for locks to be released
+        
+    * Or by retrieving specific versions of the data based on the isolation level
+        
+
+## What is an isolation level?
+
+An isolation level defines how changes made by one transaction become visible to other concurrent transactions. The choice of isolation level involves a trade-off between:
+
+* Data consistency: How accurate and up-to-date the data needs to be
+    
+* Performance: Higher isolation typically means lower concurrency and performance
+    
+* Business requirements: Some operations need perfect consistency, while others can tolerate some inconsistency for better performance
+    
+
+> Choosing the best isolation level depends on the usecase of the problem and priority.
+
+## Phenomena Defining Database Isolation Levels
+
+To understand isolation levels, we first need to understand three key phenomena that can occur during concurrent transactions. Let's understand each with a simple banking example.
+
+**Initial Database State**
+
+We start with a simple user table containing two records: Alice with $1000 and Bob with $500. Now we will understand each phenomenon taking this user’s table as base.
+
+![Illustration 1](/content/articles/images/system-design-understanding-databases-part-2/inline-image-1.png)
+
+## 1\. Dirty Read
+
+A dirty read occurs when a transaction reads data that has been modified by another transaction but not yet committed. This can lead to inconsistent data if the modifying transaction is rolled back.
+
+![Illustration 2](/content/articles/images/system-design-understanding-databases-part-2/inline-image-2.png)
+
+In this example:
+
+* Transaction 1 updates Alice's balance to $2000 but hasn't committed.
+    
+* Transaction 2 reads Alice's balance and sees $2000
+    
+* Transaction 1 rolls back the change ( now Alice’s balance is again $1000)
+    
+* Transaction 2 has read data that never actually existed in the database
+    
+
+## 2\. Non-repeatable Read
+
+A non-repeatable read happens when a transaction reads the same row twice and gets different results because another transaction modified the data between the reads.
+
+![Illustration 3](/content/articles/images/system-design-understanding-databases-part-2/inline-image-3.png)
+
+In this example:
+
+* Transaction 1 reads Alice's balance: $1000
+    
+* Transaction 2 updates Alice's balance to $1500 and commits
+    
+* Transaction 1 reads Alice's balance again: $1500
+    
+* The same query in Transaction 1 produced different results
+    
+
+## 3\. Phantom Read
+
+A phantom read occurs when a transaction reads a set of rows twice and gets a different number of rows because another transaction added or removed rows that match the query's conditions.
+
+![Illustration 4](/content/articles/images/system-design-understanding-databases-part-2/inline-image-4.png)
+
+In this example:
+
+* Transaction 1 counts all users: 2 users
+    
+* Transaction 2 inserts a new user 'Charlie' and commits
+    
+* Transaction 1 counts users again: 3 users
+    
+* The same query returned a different set of rows.
+    
+
+## Types of Isolation Levels
+
+Based on the above phenomenons, the following isolation levels are defined, and each isolation level has allowed which phenomena
+
+![Illustration 5](/content/articles/images/system-design-understanding-databases-part-2/inline-image-5.png)
+
+## Understanding each isolation level practically
+
+### Practical Demonstration Setup
+
+#### Prerequisites
+
+To follow along with this hands-on demonstration, you'll need:
+
+* MySQL Server installed locally - [Read this article](https://abhinandanmishra1.hashnode.dev/complete-guide-to-mysql-installation-and-basic-operations)
+    
+* Access to two terminal windows/sessions for concurrent transactions
+    
+
+#### Database Setup
+
+Let's create a simple banking database that we'll use to demonstrate each isolation level:
+
+```sql
+-- Create a new table to track user balances
+CREATE TABLE users (
+    id INT PRIMARY KEY,
+    name VARCHAR(50),
+    balance DECIMAL(10,2)
+);
+
+-- Insert initial test data
+INSERT INTO users VALUES 
+(1, 'Alice', 1000.00),  -- Alice starts with $1000
+(2, 'Bob', 500.00),     -- Bob starts with $500
+(3, 'Charlie', 750.00); -- Charlie starts with $750
+```
+
+#### Setting Up Concurrent Sessions
+
+1. Open two separate terminal windows
+    
+2. Connect to MySQL in both terminals:
+    
+    ```bash
+    mysql -u your_username -p  # Enter your password after that
+    ```
+    
+3. Select your database in both sessions:
+    
+    ```sql
+    USE your_database_name;
+    ```
+    
+
+### Important Notes
+
+* Each terminal represents a different transaction
+    
+* Run the commands simultaneously in both terminals to observe isolation behavior
+    
+* Make sure to set the same isolation level in both sessions before starting each demonstration
+    
+
+### Read Uncommitted (Lowest Level Isolation)
+
+```sql
+-- Terminal 1
+SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+START TRANSACTION;
+
+-- Terminal 2
+SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+START TRANSACTION;
+
+-- Example of Dirty Read:
+-- Terminal 1:
+UPDATE users SET balance = balance + 200 WHERE id = 1;
+-- Don't commit yet
+
+-- Terminal 2:
+SELECT * FROM users WHERE id = 1;  
+-- Will show Alice's balance as 1200 (dirty read of uncommitted data)
+
+-- Terminal 1:
+ROLLBACK;
+-- Now Alice's balance is back to 1000, but Terminal 2 
+--- used the wrong value that was never present in database
+```
+
+#### Demonstration Video
+
+%[https://www.youtube.com/watch?v=W-kKOXetctE] 
+
+### Read Committed
+
+```sql
+-- Terminal 1
+SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;
+START TRANSACTION;
+
+-- Terminal 2
+SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;
+START TRANSACTION;
+
+-- Example of Non-repeatable Read:
+-- Terminal 1:
+SELECT balance FROM users WHERE id = 1;
+-- Shows 1000
+
+-- Terminal 2:
+UPDATE users SET balance = balance + 200 WHERE id = 1;
+COMMIT;
+
+-- Terminal 1:
+SELECT balance FROM users WHERE id = 1;
+-- Shows 1200 (non-repeatable read - same query, different results)
+```
+
+#### Demonstration Video
+
+%[https://www.youtube.com/watch?v=saPyUYitoIY] 
+
+### Repeatable Read
+
+```sql
+-- Terminal 1
+SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+START TRANSACTION;
+
+-- Terminal 2
+SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+START TRANSACTION;
+
+-- Example of Phantom Read:
+-- Terminal 1:
+SELECT COUNT(*) FROM users WHERE balance > 600;
+-- Shows 2 records
+
+-- Terminal 2:
+INSERT INTO users VALUES (4, 'Dave', 800.00);
+COMMIT;
+
+-- Terminal 1:
+SELECT COUNT(*) FROM users WHERE balance > 600;
+-- Shows 3 records (phantom read - new row appeared)
+```
+
+#### Demonstration Video
+
+%[https://www.youtube.com/watch?v=XPKC_0fQeZI] 
+
+### Serializable
+
+```sql
+-- Terminal 1
+SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+START TRANSACTION;
+
+-- Terminal 2
+SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+START TRANSACTION;
+
+-- Example showing prevention of all phenomena:
+-- Terminal 1:
+SELECT * FROM users WHERE balance > 500;
+
+-- Terminal 2:
+-- This will wait until Terminal 1 commits or rolls back
+INSERT INTO users VALUES (5, 'Eve', 900.00);
+
+-- Terminal 1:
+-- Will show same results even if Terminal 2 tries to insert
+SELECT * FROM users WHERE balance > 500;
+```
+
+#### Demonstration
+
+%[https://www.youtube.com/watch?v=O8oXY8esky0] 
+
+## Best Practices for Choosing Isolation Levels
+
+1. **Read Uncommitted**
+    
+    * Use only for reporting or analytics where approximate values are acceptable
+        
+    * Never use for financial transactions or critical data operations
+        
+2. **Read Committed**
+    
+    * Good default choice for most applications
+        
+    * Suitable for interactive applications where some inconsistency is acceptable
+        
+3. **Repeatable Read**
+    
+    * Use when you need consistent calculations within a transaction
+        
+    * Good for financial reports and batch processing
+        
+4. **Serializable**
+    
+    * Use only when absolute consistency is required
+        
+    * Best for critical financial transactions or regulatory compliance scenarios
+        
+
+That's all for the context of this article. We have gained a good understanding of the isolation levels, which will be helpful when designing our system.

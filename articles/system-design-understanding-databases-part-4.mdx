@@ -1,0 +1,690 @@
+---
+title: "System Design - Understanding Databases - Part 4"
+brief: "Mastering Database Scaling: A Practical Guide to Partitioning and Sharding"
+publishedAt: "2025-01-13T05:25:26.186Z"
+category: "System Design"
+tags:
+  - "System Design"
+  - "Databases"
+  - "PostgreSQL"
+  - "MySQL"
+series:
+  name: "System Design"
+  slug: "system-design"
+coverImage:
+  url: "/content/articles/images/system-design-understanding-databases-part-4/cover.png"
+---
+## The intention of this article
+
+In the previous articles, we understood the importance of databases, the necessity of scaling them, and the fundamental techniques for scaling.
+
+This article aims to provide a practical understanding of scaling techniques by implementing databases and scaling them as needed. Vertical scaling is straightforward, as it involves upgrading the current system with more power; however, it has its limits. Therefore, horizontal scaling is often preferred for very large-scale systems.
+
+## What is horizontal scaling?
+
+Horizontal scaling is the distribution of data over multiple databases to accommodate a large amount of data that can't be stored in a single machine.
+
+### How is data divided?
+
+Data can be split using various criteria. For example:
+
+* **By ID ranges:** Student records 1-1000 in one database, 1001-4000 in another
+    
+* **By alphabetical order:** Students A-M in one database, N-Z in another
+    
+
+The choice of distribution method depends on the business needs but the data stored in each database should be mutually exclusive.
+
+This division of data is known as **Partitioning** and the property on which data is divided is known as the **partitioning key** and each database that has some data stored after partitioning is known as a **shard**.
+
+> For instance, imagine we have 2000 students in our database. We could create two shards: `students_db_1` storing records for roll numbers 1-1000, and `students_db_2` containing roll numbers 1001-2000. In this case, the `roll number` acts as our partitioning key, which determines which student record goes into which shard.
+
+---
+
+## Partitioning
+
+Partitioning is the process of a database where very large tables are divided into smaller tables either vertically or horizontally.
+
+## Vertical Partitioning
+
+> This partitioning is mostly for the same database because it doesn’t exclude the rows but columns and storing these partitions in different databases can make querying the full data more complex and may disrupt the business logic.
+
+Vertical partitioning involves splitting a table into smaller tables by dividing its columns while keeping a common ID in all the tables for reference. For example, if we have a `products` table with columns like ID, name, price, category, seller, details, description, and images, we can divide it into two tables:
+
+1. A table with ID, name, price, category, seller, details, and description.
+    
+2. A table with ID and images, where the images are stored as blobs.
+    
+
+Another use of vertical partitioning is to protect sensitive data, like passwords or salary details, by storing them in separate tables. This method essentially creates smaller tables with different columns from the original.
+
+### Impact of vertical partitioning
+
+After the vertical partitioning number of tables increases and when we store tables in the:
+
+1. **Same Database**
+    
+    1. Row count stays constant across partitioned tables
+        
+    2. Each partition can be utilized differently and no need to fetch all the data of the table, only required data is fetched from the particular table
+        
+        * For example, in an employee table, sensitive details like salary can be stored in a separate partition, ensuring only authorized users like the employer or employee can access them, while general employee information remains accessible to others.
+            
+    3. Security increases because sensitive data can be separated.
+        
+    4. Retrieving complete records requires JOIN operations, which add some computational overhead. However, since the join is performed on the indexed primary key, the efficiency is only minimally affected.
+        
+2. **Different Database**
+    
+    1. Storage benefits increase as data is distributed across databases
+        
+    2. Database overhead for each new partition
+        
+    3. Total space utilization may increase due to duplicate ID columns in each partition
+        
+    4. Performance considerations change significantly:
+        
+        * Cross-database queries are **highly expensive**
+            
+        * Network latency becomes a major factor
+            
+        * Multiple separate queries may be needed instead of JOINs
+            
+        * Maintaining data consistency becomes more challenging
+            
+
+---
+
+> ### **Question:** Since, vertical partitioning is partitioning the tables into smaller tables by just dividing the columns then isn’ this same as **Normalization** in databases?
+> 
+> #### **Normalization**
+> 
+> Normalization is a done during the time of designing the database in order to remove redundancy of the data.
+> 
+> For example,
+> 
+> Customers table has a list of customers, each customer has multiple orders and each order has multiple items and tracking details of each order item. Now, storing all data in a single table of customer with all of it’s order and orderItems as form of an array and then maintaining the tracking details of each item and calculating the total price of order is hard and it creates data redundancy and performance gets decreased here comes Normalization to:
+> 
+> 1. Remove duplicate data
+>     
+> 2. Enforce data consistency
+>     
+> 3. Improve data security
+>     
+> 
+> The better way to store the details for above exmaple would be customers table will have customers data with customerId, orders table have orders with orderId as primaryKey and customerId and itemId as foreign key to associate that item with order, items table will have item details with itemId as primaryKey and trackingDetails table will have trackingId as primarykey and orderId as foreignKey for associating that particular order and itemId as foreignKey for associating that particular item with that tracking.
+> 
+> There are several normalization levels, including:
+> 
+> 1. First Normal Form (1NF): Eliminate repeating groups
+>     
+> 2. Second Normal Form (2NF): Eliminate partial dependencies
+>     
+> 3. Third Normal Form (3NF): Eliminate transitive dependencies
+>     
+> 
+> #### **Vertical Partitioning**
+> 
+> Vertical partitioning, also known as column partitioning or row splitting, involves dividing a table into multiple smaller tables based on a subset of columns.
+> 
+> In vertical partitioning there’s no foreign key involvement for creating the relationship instead the same primaryKey is used in both the tables and it’s not necessary to do for the removing the redundancy only as we do in the normalization but it’s done for improving the performance mainly.
+> 
+> 1. Improve performance by reducing the width of each table
+>     
+> 2. Enhance security by limiting access to sensitive data
+>     
+> 
+> For example,
+> 
+> For each item in the items table there’s an image column and we've stored the image as BLOB data and every time we want the detail of the item we don’t want to fetch the image of the item instead we want the price, discount, seller name and other details but because of BLOB data the query speed is slow. So, we split the items table into two tables itemdetails, containing all columns except image and itemImage table with itemId and image. This will make use to fetch items data without images and the traversal will be fast and when we want image it can be directly fetched from the itemImages table. In another example employees and salary tables, each employee has salary but salary details is private to the employee and employer so we can separate the salary info of the employee to another table with more security so that only that employee and employer can see the salary data but other data of the employee can be seen by others too.
+> 
+> Normalization and vertical partitioning are both techniques for optimizing database design, but they serve different purposes and operate at different levels of granularity. Normalization focuses on eliminating data redundancy and improving data integrity, while vertical partitioning aims to improve performance and security by dividing tables based on column subsets.
+
+### Practical implementation of Vertical Partitioning
+
+**Requirements**
+
+* MySQL and Python installed locally
+    
+* Knowledge of creating APIs and writing SQL queries
+    
+
+I will use Python and FastAPI to create APIs; however, if you have experience creating APIs in another language, you should still be able to understand this implementation. We will create a `social_media` application focusing on post features only with two tables: `posts` and `users`.
+
+**SQL for initiating database**
+
+```sql
+--- Creating database
+CREATE DATABASE social_media;
+USE social_media;
+
+--- Creating users table
+CREATE TABLE users (
+    user_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    full_name VARCHAR(100),
+    bio TEXT,
+    region VARCHAR(50) NOT NULL,
+    profile_picture_url VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_username (username),
+    INDEX idx_email (email)
+);
+
+--- Creating posts table
+CREATE TABLE posts (
+    post_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,     
+    content TEXT,
+    media_url VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    likes_count INT DEFAULT 0,
+    comments_count INT DEFAULT 0,
+    INDEX idx_user_id (user_id),
+    INDEX idx_created_at (created_at),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+```
+
+**SQL for Vertical Partitioning of Posts Table**
+
+Instead of storing all post information in a single table, we can partition it into three tables: `posts_core` for main post data; `posts_media` for media details; and `posts_metrics` for dynamic post metrics that change based on user interaction.
+
+```sql
+USE social_media;     --- partitioning in the same database to avoid cross database queries
+
+--- posts_core table store main data of the post
+CREATE TABLE posts_core (
+    post_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    content TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_created_at (created_at)
+);
+
+--- posts_media table store the media details
+CREATE TABLE posts_media (
+    post_id BIGINT PRIMARY KEY,
+    media_url VARCHAR(255),
+    media_type ENUM('image', 'video', 'audio'),
+    media_size INT,
+    FOREIGN KEY (post_id) REFERENCES posts_core(post_id)
+);
+
+--- posts_metrics has the dynamic data of the post that changes based on interaction of users
+CREATE TABLE posts_metrics (
+    post_id BIGINT PRIMARY KEY,
+    likes_count INT DEFAULT 0,
+    comments_count INT DEFAULT 0,
+    shares_count INT DEFAULT 0,
+    views_count INT DEFAULT 0,
+    FOREIGN KEY (post_id) REFERENCES posts_core(post_id)
+);
+```
+
+**Connecting with Local Database in Python**
+
+You need to install the `mysql-connector-python` library.
+
+1. Create a method for connecting to MySQL database:
+    
+2. ```python
+      import mysql.connector
+      
+      from dotenv import load_dotenv
+      import os
+      
+      load_dotenv()
+      
+      def get_connection(db_name = None):
+          return mysql.connector.connect(
+              host=os.getenv("host"),
+              user=os.getenv("username"),
+              password=os.getenv("password"),
+              database=db_name,
+          )
+    ```
+    
+3. **Implementation of Vertical Partitioned Posts in Python**
+    
+    ```python
+    from ..utils import get_connection
+    
+    class VerticalPartitionedDB:
+        def __init__(self):
+            self.conn = get_connection("social_media")
+            self.cursor = self.conn.cursor()
+    
+        def create_post(self, user_id, content, media_url=None):
+            try:
+                # Start transaction
+                self.conn.start_transaction()
+    
+                # Insert core post data
+                core_query = """
+                INSERT INTO posts_core (user_id, content)
+                VALUES (%s, %s)
+                """
+                self.cursor.execute(core_query, (user_id, content))
+                post_id = self.cursor.lastrowid
+    
+                # Insert media data if provided
+                if media_url:
+                    media_query = """
+                    INSERT INTO posts_media (post_id, media_url)
+                    VALUES (%s, %s, %s)
+                    """
+                    self.cursor.execute(media_query, (post_id, media_url))
+    
+                # Initialize metrics
+                metrics_query = """
+                INSERT INTO posts_metrics (post_id)
+                VALUES (%s)
+                """
+                self.cursor.execute(metrics_query, (post_id,))
+    
+                # Commit transaction
+                self.conn.commit()
+                return post_id
+    
+            except Exception as e:
+                self.conn.rollback()
+                raise e
+    
+        def get_post_complete(self, post_id):
+            query = """
+            SELECT c.*, m.media_url, m.media_type, mt.likes_count, mt.comments_count, mt.shares_count, mt.views_count
+            FROM posts_core c
+            LEFT JOIN posts_media m ON c.post_id = m.post_id
+            LEFT JOIN posts_metrics mt ON c.post_id = mt.post_id
+            WHERE c.post_id = %s
+            """
+            self.cursor.execute(query, (post_id,))
+            return self.cursor.fetchone()
+    
+        def close(self):
+            self.cursor.close()
+            self.conn.close()
+    ```
+    
+
+## Horizontal Partitioning ( aka Sharding )
+
+Horizontal partitioning involves dividing a table's rows into multiple tables, called partitions. Each partition has the same structure and columns but contains different rows. The data in each partition is unique and separate from the others.
+
+Horizontal partitioning is mainly needed during horizontal scaling when the system requires more RAM or CPU, and "scaling up" (vertical scaling) reaches hardware limits. In this case, "scaling out" (horizontal scaling) is the only option.
+
+Another reason for horizontal partitioning is to improve query performance by splitting the data into multiple database nodes, called shards so that a query can run on just one shard at a time. Sharding also eliminates the risk of a single point of failure.
+
+![horizontal scaling in sharding illustration](/content/articles/images/system-design-understanding-databases-part-4/inline-image-1.jpeg)
+
+### Impact of Horizontal Partitioning
+
+After horizontal partitioning, the number of tables increases as rows are distributed across partitions. Depending on where these tables are stored, the impact varies:
+
+**Single Database with multiple similar tables:**
+
+* No scaling is possible because tables are in the same database.
+    
+* Each partition contains a subset of rows, allowing queries to target specific partitions, and improving query performance.
+    
+* For example, in an employee table, data can be partitioned based on regions (e.g., employees in North, South, East, and West), so queries for a specific region only access relevant rows.
+    
+* Data integrity and consistency are easier to maintain since partitions are within the same database.
+    
+
+**Different Databases with the same table:**
+
+* Storage benefits increase as data is distributed across multiple databases, reducing the load on a single database.
+    
+* Database overhead grows with each new partition.
+    
+* Cross-database queries are complex and expensive, that’s why sharding is done in such a way that cross-database queries are avoided.
+    
+
+### **Sharding architectures and types**
+
+#### Range based sharding
+
+* Divides data based on ranges of a partition key
+    
+* Suitable for sequential data access patterns
+    
+
+#### Algorithmic/hashed sharding
+
+* Uses a hash function to distribute data evenly
+    
+* Better for random data distribution
+    
+
+#### Entity-/relationship-based sharding
+
+* Keeps related data together on single shards
+    
+* Optimal for maintaining data relationships
+    
+* For instance, consider the case of a shopping database with users and payment methods. Each user has a set of payment methods that is tied tightly to that user. As such, keeping related data together on the same shard can reduce the need for broadcast operations, increasing performance.
+    
+
+#### Geography-based sharding
+
+* Distributes data based on geographic location
+    
+* Reduces latency for location-specific queries
+    
+* For example, consider a dataset where each record contains a “country” field. In this case, we can both increase overall performance and decrease system latency by creating a shard for each country or region and storing the appropriate data on that shard. This is a simple example, and there are many other ways to allocate your shards that are beyond the scope of this article. Facebook example suits best here.
+    
+
+### Practical implementation of Horizontal Partitioning or Sharding
+
+Horizontal partitioning is particularly useful for managing large datasets, improving scalability, and optimizing query performance for specific subsets of data. In this article, I will implement **multiple databases with the same table** approach using geographical sharding, range-based sharding, and hash-based sharding.
+
+1. **Geographical sharding**
+    
+
+For geographical sharding, I will separate users by continent. Given that the number of users from North America, Europe, and Asia is significantly higher than from other regions, I will create four database servers for each geographical location:
+
+```python
+geographical_databases = [
+    "social_media_na",
+    "social_media_eu",
+    "social_media_asia",
+    "social_media_other",
+]
+```
+
+2. **Range based sharding**
+    
+
+In a social media application with numerous users, I will create three shards: `social_media_range_1` for posts from users with IDs 1 to 100000, `social_media_range_2` for users with IDs 100001 to 200000, and `social_media_range_3` for remaining users’ posts:
+
+```python
+range_databases = [
+    "social_media_range_1",
+    "social_media_range_2",
+    "social_media_range_3",
+]
+```
+
+3. **Hash-based sharding**
+    
+
+I will create four shards using a hash function based on the modulo of `user_id` by 4. This will determine where each user's posts are stored:
+
+```python
+hash_databases = [
+    "social_media_hash_0",
+    "social_media_hash_1",
+    "social_media_hash_2",
+    "social_media_hash_3"
+]
+```
+
+#### Creating different shards for the social\_media database with Posts Table
+
+Each shard requires its `posts` table. Below is the Python code to create the database and then create the `posts` table in each database:
+
+```python
+import mysql.connector
+from mysql.connector import Error
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+# List of databases for horizontal partitioning
+horizontal_databases = [
+    # geographical based shards
+    "social_media_na",
+    "social_media_eu",
+    "social_media_asia",
+    "social_media_other",
+    # range based shards
+    "social_media_range_1",
+    "social_media_range_2",
+    "social_media_range_3",
+    # hash based shards
+    "social_media_hash_0",
+    "social_media_hash_1",
+    "social_media_hash_2",
+    "social_media_hash_3"
+]
+
+# Query for creating the posts table in horizontal partitions
+create_horizontal_posts_table = """
+CREATE TABLE IF NOT EXISTS posts (
+    post_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    content TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    media_url VARCHAR(255),
+    media_type VARCHAR(50),
+    likes_count INT DEFAULT 0,
+    comments_count INT DEFAULT 0,
+    INDEX idx_user_id (user_id),
+    INDEX idx_created_at (created_at)
+);
+"""
+
+def create_horizontal_partitions(cursor):
+    """Create horizontal partition databases and their posts table."""
+    for db_name in horizontal_databases:
+        try:
+            # Create the database
+            cursor.execute(f"CREATE DATABASE IF NOT EXISTS {db_name}")
+            print(f"Database `{db_name}` created or already exists.")
+            
+            # Use the database
+            cursor.execute(f"USE {db_name}")
+            
+            # Create the posts table
+            cursor.execute(create_horizontal_posts_table)
+            print(f"Table `posts` created in `{db_name}`.")
+        except Error as e:
+            print(f"Error occurred for database `{db_name}`: {e}")
+
+def main():
+    connection = None
+    try:
+        # Connect to the MySQL server
+        connection = mysql.connector.connect(
+            host=os.environ["host"],  
+            user=os.environ["username"], 
+            password=os.environ["password"]  
+        )
+        
+        if connection.is_connected():
+            print("Connected to MySQL Server")
+            cursor = connection.cursor()
+            
+            # Create horizontal partitions and their posts tables
+            print("Creating horizontal partitions...")
+            create_horizontal_partitions(cursor)
+            
+            # Commit all changes
+            connection.commit()
+            print("All databases and tables created successfully.")
+    
+    except Error as e:
+        print(f"Error: {e}")
+    
+    finally:
+        # Close the connection
+        if connection and connection.is_connected():
+            cursor.close()
+            connection.close()
+            print("MySQL connection closed.")
+
+if __name__ == "__main__":
+    main()
+```
+
+Now that each type of **shard** has been created, we need to implement the logic for sharding.
+
+#### **Sharding Implementation in Python**
+
+##### **ShardedDB class**
+
+Now we define a class that encapsulates sharding logic:
+
+```python
+from enum import Enum
+from typing import Dict, Any, Tuple, Optional
+
+class ShardingStrategy(Enum):
+    GEOGRAPHIC = "GEOGRAPHIC"
+    RANGE = "RANGE"
+    HASH = "HASH"
+
+class ShardedDB:
+    def __init__(self):
+        self.connections: Dict[str, mysql.connector.MySQLConnection] = {}
+        self.init_connections()
+
+    def init_connections(self):
+        main_db = self._create_connection('social_media')
+        self.connections['social_media'] = main_db
+        
+        # Initialize connections for geographic sharding
+        geo_dbs = ['NA', 'EU', 'ASIA', 'OTHER']
+        for region in geo_dbs:
+            self.connections[f'geo_{region}'] = self._create_connection(f'social_media_{region}')
+        
+        # Initialize connections for range-based sharding
+        for i in range(1, 4):
+            self.connections[f'range_{i}'] = self._create_connection(f'social_media_range_{i}')
+        
+        # Initialize connections for hash-based sharding
+        for i in range(4):
+            self.connections[f'hash_{i}'] = self._create_connection(f'social_media_hash_{i}')
+
+    def _create_connection(self, database: str) -> mysql.connector.MySQLConnection:
+        try:
+            return get_connection(database)
+        except Error as e:
+            print(f"Error connecting to database {database}: {e}")
+            raise
+```
+
+* The `ShardedDB` class manages connections to different shards based on specified strategies (geographic, range-based, hash).
+    
+* The `_create_connection` method establishes a connection to each specified shard.
+    
+
+##### **Data Access Methods**
+
+The following methods retrieve connections based on user ID and strategy:
+
+```python
+def get_connection_by_strategy(
+        self,
+        strategy: str,
+        user_id: int,
+        post_id: Optional[int] = None 
+) -> Tuple[mysql.connector.MySQLConnection, str]:
+    
+    if strategy == ShardingStrategy.GEOGRAPHIC.value:
+        region = self._get_user_region(user_id)
+        return self.connections[f'geo_{region}'], f'geo_{region}'
+    
+    elif strategy == ShardingStrategy.RANGE.value:
+        shard_number = self._get_range_shard(post_id if post_id else user_id)
+        return self.connections[f'range_{shard_number}'], f'range_{shard_number}'
+    
+    elif strategy == ShardingStrategy.HASH.value:
+        shard_number = self._get_hash_shard(user_id)
+        return self.connections[f'hash_{shard_number}'], f'hash_{shard_number}'
+    
+    raise ValueError(f"Invalid sharding strategy: {strategy}")
+```
+
+* The `get_connection_by_strategy()` method determines which shard to connect to based on the specified sharding strategy.
+    
+* It uses helper methods `_get_user_region()`, `_get_range_shard()`, and `_get_hash_shard()` to identify which shard corresponds to a given user ID or post ID.
+    
+
+##### **Creating Posts**
+
+The following method handles creating posts in the appropriate shard:
+
+```python
+def create_post(self, strategy: str, user_id: int, content: str) -> Dict[str, Any]:
+    
+    conn, shard_id = self.get_connection_by_strategy(strategy, user_id)
+    
+    cursor = conn.cursor()
+    
+    try:
+        query = """INSERT INTO posts (user_id, content) VALUES (%s, %s)"""
+        
+        cursor.execute(query, (user_id, content))
+        
+        post_id = cursor.lastrowid
+        
+        conn.commit()
+        
+        cursor.execute("SELECT * FROM posts WHERE post_id = %s", (post_id,))
+        
+        post = cursor.fetchone()
+        
+        response = {
+            'post_id': post[0],
+            'user_id': post[1],
+            'content': post[2],
+            'created_at': str(post[3]),
+            'shard_id': shard_id 
+        }
+        
+        return response
+    
+    except Error as e:
+        conn.rollback()
+        raise Exception(f"Error creating post: {str(e)}")
+    
+    finally:
+        cursor.close()
+```
+
+* The `create_post()` method inserts a new post into the appropriate shard based on its user ID.
+    
+* It retrieves and returns details of the newly created post after insertion.
+    
+
+##### **Retrieving Posts**
+
+```python
+def get_post(self, post_id: int, shard_id) -> Optional[Dict[str, Any]]:
+    conn = self.connections[shard_id]
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("SELECT * FROM posts WHERE post_id = %s", (post_id,))
+        
+        post = cursor.fetchone()
+        
+        if not post:
+            return None
+        
+        return {
+            'post_id': post[0],
+            'user_id': post[1],
+            'content': post[2],
+            'created_at': str(post[3]),
+            'shard_id': shard_id 
+        }
+    
+    finally:
+        cursor.close()
+```
+
+## Test Yourself
+
+I have combined all the code and API implementation using FastAPI in this GitHub repository. You can follow the steps mentioned in the README to test each API yourself and understand sharding and partitioning in practice.
+
+Repo: [https://github.com/abhinandanmishra1/system-design/tree/main/sharding-and-partitioning](https://github.com/abhinandanmishra1/system-design/tree/main/sharding-and-partitioning)
+
+That's the end of this article. I hope you now better understand sharding and partitioning and how they work in practice. If you have any questions or suggestions, feel free to comment.

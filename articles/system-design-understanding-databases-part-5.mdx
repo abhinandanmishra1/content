@@ -1,0 +1,183 @@
+---
+title: "System Design - Understanding Databases - Part 5"
+brief: "Navigating the Database Maze: Choosing Between Relational and NoSQL Databases"
+publishedAt: "2025-01-27T11:00:50.079Z"
+category: "System Design"
+tags:
+  - "System Design"
+  - "Databases"
+  - "PostgreSQL"
+  - "MySQL"
+series:
+  name: "System Design"
+  slug: "system-design"
+coverImage:
+  url: "/content/articles/images/system-design-understanding-databases-part-5/cover.png"
+---
+In the world of database management, choosing between relational databases (RDBMS) and non-relational databases (NoSQL) is a critical decision. This article explores the limitations and benefits of relational and non-relational databases and provides an overview of various non-relational databases. It also discusses scenarios for selecting the appropriate database type based on business use cases.
+
+---
+
+## Non-relational databases
+
+A non-relational database, sometimes called NoSQL (Not Only SQL), doesn’t use the tables, fields, and columns structured data concept from relational databases. Non-relational databases have been designed with the cloud in mind, making them great at horizontal scaling.
+
+Based on their data model, NoSQL databases come in various types. The main types are document, key-value, wide-column, and graph. They provide flexible schemas and scale easily with large amounts of big data and high user loads.
+
+## Types of non-relational databases
+
+### **Document-oriented databases**
+
+A document-oriented database stores data in documents similar to JSON (JavaScript Object Notation) objects, where each document contains pairs of fields and values. These values can be of various types, such as strings, numbers, booleans, arrays, or even other objects.
+
+A document database provides a flexible data model that is well-suited for semi-structured and typically unstructured data sets. They also support nested structures, making representing complex relationships or hierarchical data easy.
+
+**Use Cases**: Ideal for content management systems and applications requiring flexible data models (e.g., MongoDB, CouchDB).
+
+A typical document will look like the following:
+
+```javascript
+{
+  "_id": "12345",
+  "name": "foo bar",
+  "email": "foo@bar.com",
+  "address": {
+    "street": "123 foo street",
+    "city": "some city",
+    "state": "some state",
+    "zip": "123456"
+  },
+  "hobbies": ["music", "guitar", "reading"]
+}
+```
+
+### **Key-value databases**
+
+A key-value store is a simpler type of database where each item contains keys and values. Each key is unique and associated with a single value. They are used for caching and session management and provide high performance in reads and writes because they tend to store things in memory.
+
+**Use Cases**: Best suited for caching and session management (e.g., Redis, DynamoDB).
+
+A simple view of data stored in a key-value database is given below:
+
+```javascript
+Key: user:12345
+Value: {"name": "foo bar", "email": "foo@bar.com", "designation": "software developer"}
+```
+
+### **Wide-column stores**
+
+Wide-column stores store data in tables, rows, and dynamic columns. The data is stored in tables. However, unlike traditional SQL databases, wide-column stores are flexible, where different rows can have different sets of columns. These databases can employ column compression techniques to reduce storage space and enhance performance. The wide rows and columns enable efficient retrieval of sparse and wide data.
+
+**Use Cases**: Effective for time-series data and applications with heavy write operations (e.g., Cassandra, HBase).
+
+A typical example of how data is stored in a wide column is as follows:
+
+| **name** | **id** | **email** | **dob** | **city** |
+| --- | --- | --- | --- | --- |
+| **Foo bar** | 12345 | foo@bar.com | <mark>—————</mark> | Bangalore |
+| **Carn Yale** | 34521 | bar@foo.com | 12-05-1972 | <mark>—————</mark> |
+
+### **Graph databases**
+
+A graph database stores data in the form of nodes and edges. Nodes typically store information about people, places, and things (like nouns), while edges store information about the relationships between the nodes. They work well for highly connected data, where the relationships or patterns may not be very obvious initially.
+
+**Use Cases**: Excellent for social networks and recommendation systems (e.g., Neo4j).
+
+Below is an example of how data is stored:
+
+![Illustration 1](/content/articles/images/system-design-understanding-databases-part-5/inline-image-1.png)
+
+---
+
+## How to choose the right database?
+
+Choosing the right database depends on the business use case. No single database is suitable for all types of use cases. As we have learned about relational and non-relational databases, we can choose based on our specific needs. Let's explore the benefits and limitations of both relational and non-relational databases to gain a better understanding and help us select the right database.
+
+### The Advantages and Limits of Relational Databases
+
+Relational databases have been a cornerstone of data management for over four decades, offering numerous benefits.
+
+#### Advantages of Relational Databases
+
+* **Structured Data**: Data is organized into tables with rows and columns, allowing for complex queries using SQL.
+    
+* **ACID Compliance**: Relational databases ensure transactions are processed reliably through Atomicity, Consistency, Isolation, and Durability.
+    
+
+#### Limitations of Relational Databases
+
+However, despite these advantages, relational databases face significant limitations:
+
+* **Fixed Schema**: Schema modifications can be complex and time-consuming.
+    
+* **Complex Joins**: Join operations may impact performance at scale.
+    
+* **Scalability Issues**: Scaling a relational database often involves vertical scaling (upgrading hardware), which can be costly and has inherent limitations in capacity.
+    
+* **Flexibility**: Limited flexibility for handling unstructured data.
+    
+
+### The Advantages and Limits of Non-Relational Databases
+
+Non-relational databases allow for the storage of unstructured or semi-structured data and facilitate rapid application development without the constraints of traditional schemas.
+
+#### Advantages of Non-Relational Databases
+
+1. **Flexible Schema**: Non-relational databases allow for dynamic changes in data structure without requiring extensive redesigns.
+    
+2. **Horizontal Scaling**: They can easily scale out by adding more servers, accommodating large volumes of data and high user loads efficiently.
+    
+3. **Faster Queries**: By storing related data together, NoSQL databases reduce the need for complex joins, resulting in quicker query responses.
+    
+
+#### Limitations of Non-Relational Databases
+
+While NoSQL databases offer flexibility and scalability, they also present challenges:
+
+* **Eventual Consistency**: Many NoSQL systems relax ACID properties in favor of scalability, leading to potential data consistency issues.
+    
+* **Complex Querying**: Some NoSQL databases may not support complex querying capabilities as efficiently as SQL-based systems.
+    
+
+---
+
+### Choosing Between Relational and Non-Relational Databases
+
+Consider these factors when choosing your database:
+
+1. **Data Structure**
+    
+    * Well-defined, stable structure → Relational
+        
+    * Dynamic, evolving structure → Non-relational
+        
+2. **Scale Requirements**
+    
+    * Predictable, moderate growth → Either option is viable
+        
+    * Rapid, unpredictable growth → Non-relational preferred
+        
+3. **Consistency Requirements**
+    
+    * Strict consistency needed → Relational
+        
+    * Eventual consistency acceptable → Non-relational
+        
+4. **Query Patterns**
+    
+    * Complex joins and transactions → Relational
+        
+    * Simple, high-volume operations → Non-relational
+        
+5. **Development Speed**
+    
+    * Rapid prototyping needed → Non-relational
+        
+    * Stable, long-term system → Either option is viable
+        
+
+In conclusion, both relational and non-relational databases have their unique strengths and weaknesses. A thorough understanding of your application's requirements will help you make an informed decision on which database type to implement.
+
+---
+
+That’s all for this article and the last part of databases. I hope you have a better understanding of databases and an idea of which database to choose while building real-life applications. Feel free to drop a comment for any doubts or suggestions for improvements.

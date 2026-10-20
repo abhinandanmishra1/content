@@ -1,0 +1,224 @@
+---
+title: "React Hooks: The Base of React Components  [Part - 1]"
+brief: "This article explains why hooks are used, what are react hooks and how to use them to make life better?"
+publishedAt: "2023-02-11T09:34:51.216Z"
+category: "React & Frontend"
+tags:
+  - "React & Frontend"
+  - "React"
+  - "Hooks"
+series:
+  name: "React Hands-On"
+  slug: "react-hands-on-series"
+coverImage:
+  url: "/content/articles/images/react-hooks-the-base-of-react-components-part-1/cover.webp"
+---
+### Prerequisite
+
+* Have basic knowledge of React
+    
+* If you don't have basic knowledge, read my [previous blogs](https://abhinandanmishra1.hashnode.dev/) on react.
+    
+
+> **Tip:** Don't get scared by any javascript concept that you see and don't know about it. (Google It)
+> 
+> Just read the whole blog once and at the end, you will find yourself in a good position to understand things more precisely.
+
+### React (Before Hooks): Understanding class-based components
+
+Before React Hooks, developers had to use class-based components to manage state and lifecycle methods in their applications.
+
+For example, consider a simple to-do list application. To add a to-do item, you need to keep track of the list of items and provide a way to add a new item. With a class-based component, this would look something like this:
+
+```javascript
+// read code first then read code explanation below
+class ToDoList extends React.Component {
+  constructor(props) {
+    super(props);  
+    this.state = {
+      items: [],
+    };
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick() {
+    this.setState({
+      items: [...this.state.items, "New Todo Item"],
+    });
+  }
+
+  render() {
+    return (
+      <div>
+        <ul>
+          {this.state.items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+        <button onClick={this.handleClick}>Add Item</button>
+      </div>
+    );
+  }
+}
+```
+
+#### Code Explanation:
+
+* In this example, we have a class-based component `ToDoList` that keeps track of the list of to-do items in its state.
+    
+* The component also has a `handleClick` the method that is bound in the constructor and updates the state when the **Add Item** button is clicked.
+    
+
+#### Understanding class-based react components and their demerits
+
+**1\. constructor:**
+
+In class components, you initialize the state in the constructor and set it as a property on the instance (`this`). You have to call `super(props)` before using `this` inside the constructor, because the class component extends *React.Component* and the `super` the method must be invoked to properly inherit from the parent class.
+
+> In the class-based component, we create each component as a child class of **React.Component** class.
+
+```javascript
+  constructor (props) {
+    super(props) // for proper inherit from the parent class
+    
+    ...
+  }
+```
+
+**2\. Binding methods with the current method**
+
+When you define class methods inside a class component, they don't automatically bind `this` to the instance of the class. As a result, when you try to access `this.setState` in the method, it might be undefined, leading to the <mark>"Cannot read property setState of undefined"</mark> error.
+
+```javascript
+constructor(props) {
+    super(props);
+    ...
+    // binding of methods 
+    this.handleClick = this.handleClick.bind(this);
+}
+```
+
+To avoid this, you need to manually bind the method in the constructor by using `this.methodName = this.methodName.bind(this)`. With this, `this` inside the method will refer to the instance of the class, allowing you to access `this.setState` and other class properties.
+
+**3\. Duplicate Logic**
+
+Let's say in the above **TodoList** component you have to keep the todo *items* in sync with local storage and make sure that the component's state is updated whenever the list changes.
+
+For achieving this thing you have to use the `componentDidUpdate` and `componentDidMount` methods, as used below:
+
+```javascript
+class ToDoList extends React.Component {
+  constructor(props) {
+    super(props);  
+    this.state = {
+      items: [],
+    };
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  componentDidMount() {
+    // fetch the todolist from local storage
+    const items = JSON.parse(localStorage.getItem("todolist"));
+    if (items) {
+      this.setState({ items });
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    // update the todolist in local storage
+    if (prevState.items !== this.state.items) {
+      localStorage.setItem("todolist", JSON.stringify(this.state.items));
+    }
+  }
+
+  handleClick() {
+    this.setState({
+      items: [...this.state.items, "new item"],
+    });
+  }
+
+  render() {
+    return (
+      <div>
+        <ul>
+          {this.state.items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+        <button onClick={this.handleClick}>Add Item</button>
+      </div>
+    );
+  }
+}
+```
+
+The `componentDidMount` method is called after the component has been mounted (or loaded) and is used to fetch the todolist from local storage. If there is a todolist saved in local storage, we use `setState` to update the component's state with the saved items.
+
+The `componentDidUpdate` method is called after the component has been updated, and we use it to update the todolist in local storage. We compare the previous state with the current state, and if the items have changed, we save the updated items to local storage using `localStorage.setItem`.
+
+> **Demerits of class-based components**
+> 
+> * Now, you might have got some idea that how painful it was for developers to create and manage the states in the class-based components and also take care of calling `super(props)` and binding each method with the constructor.
+>     
+> * The `componentDidMount` and `componentDidUpdate` is used to keep the **localStorage** and component's **state** for todo **items in** sync.
+>     
+>     But, for doing the sync operation two different functions are used here which is not an efficient way.
+>     
+
+### Why react hooks?
+
+React Hooks were introduced in *React 16.8* and it allows developers to accomplish all the features like state management, **componenetDidUpdate**, **componentDidMount** and more using functional components, which were previously only available in class components.
+
+By using hooks, developers can write more concise, readable and maintainable code. They can also reuse state logic across multiple components and share it between different components as custom hooks.
+
+For example, instead of using `componentDidMount` and `componentDidUpdate` methods to fetch and update data in local storage as seen in the previous implementation, you could use the **useState** and **useEffect** hooks to accomplish the same functionality.
+
+Overall, hooks provide a cleaner, more functional approach to handling state and other React features, making the code easier to write, understand, and maintain.
+
+### What are Hooks?
+
+Hooks are nothing but regular javascript functions that provide a way to use special features from React in a simple way by just calling a function.
+
+React has some built-in hooks that provide features like keeping track of changes (**useState**), when a component appears or updates or disappears (**useEffect**), and sharing information with other components (**useContext**).
+
+> You can combine built-in Hooks provided by React into your own “custom Hooks”. This lets you turn complex problems into one-liners and share them across your application.
+
+### Built-in react hooks
+
+There are many hooks provided by react itself. You can learn about them using react documentation.
+
+Here's a list of the most commonly used react hooks:
+
+* `useState`
+    
+* `useEffect`
+    
+* `useContext`
+    
+* `useLayoutEffect`
+    
+* `useReducer`
+    
+* `useCallback`
+    
+* `useMemo`
+    
+* `useRef`
+    
+
+### Conclusion
+
+* Till this point, we got to know how React was before the use of hooks.
+    
+* How class-based react components were used and how it was a headache for react developers to use `super(props)` always and `binding` each method with the constructor?
+    
+* We learned how two different functions were required to complete a single task of keeping todo **items** of the component's state in sync with the **localStorage**.
+    
+* We got to know that these problems can be solved using hooks very easily.
+    
+
+In next part of the blog, we will get to know about how React hooks are used in the components.
+
+Please upvote if you find the blog useful.
+
+[<mark>Next Blog</mark>](https://abhinandanmishra1.hashnode.dev/react-hooks-the-base-of-react-components-part-2)

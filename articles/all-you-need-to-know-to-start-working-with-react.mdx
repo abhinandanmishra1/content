@@ -1,0 +1,140 @@
+---
+title: "All you need to know to start working with react"
+brief: "This blog teaches you how to start creating react apps."
+publishedAt: "2023-01-25T09:12:39.539Z"
+category: "React & Frontend"
+tags:
+  - "React & Frontend"
+  - "React"
+series:
+  name: "React Hands-On"
+  slug: "react-hands-on-series"
+coverImage:
+  url: "/content/articles/images/all-you-need-to-know-to-start-working-with-react/cover.webp"
+---
+### Requirements:
+
+* Beginner with basic knowledge of HTML, CSS, js and using terminal.
+    
+* Node.js should be installed in your system - [Install](https://nodejs.org/en/download/)
+    
+* A code editor for writing codes. ( I prefer [VScode](https://code.visualstudio.com/download))
+    
+
+### Create a react app:
+
+* Create a folder - `start-react`
+    
+* Go to folder location in terminal using - `cd start-react`
+    
+* Run command `npx create-react-app .` , this command initializes the current folder as a react app.
+    
+
+### Folder Structure:
+
+![FolderStructure](/content/articles/images/all-you-need-to-know-to-start-working-with-react/inline-image-1.png)
+
+* `node_modules` is a folder that contains all the packages and their respective dependencies that are required or used in the project.
+    
+* Dependencies are external libraries or modules that have been used or are needed to run the react application.
+    
+    * `package.json` has a list of all the `dependencies` used in the project.
+        
+    * `package.lock.json` contains information on specific versions of those dependencies.
+        
+* `public` folder contains some files of which `index.html` is the most important file and it has only one `div` present in its body with `id = "root"` . This div is the main container where all react code will be rendered.
+    
+* `src` the folder is the most important folder which you will deal with most of the time.
+    
+    * It has three main files `index.js` , `index.css` and `App.js` . All files other than this can be deleted and we can create project-related files when needed.
+        
+    * `index.js` the file is the root file that connects our react codes to the `index.html` present in `public` folder using the `div` with `id = "root"` .
+        
+    * `App.js` is nothing but the main or first component of the react app which is rendered.
+        
+    * This code of `index.js` will make it more understandable to you.
+        
+        ```javascript
+        import React from 'react';
+        import ReactDOM from 'react-dom/client';
+        import './index.css';
+        import App from './App';
+        
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        // this root refers to the div in the index.html of public folder
+        
+        root.render(
+          <React.StrictMode>
+            <App />
+          </React.StrictMode>
+        );
+        
+        // render is a method in React which renders the react components
+        ```
+        
+    * Do this to your src folder:
+        
+        * Remove all the files inside src folder except `index.js` , `App.js` and `index.css` .
+            
+        * Update the `index.js` as follows
+            
+            ```javascript
+            import React from 'react';
+            import ReactDOM from 'react-dom/client';
+            import './index.css';
+            import App from './App';
+            
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(
+              <React.StrictMode>
+                <App />
+              </React.StrictMode>
+            );
+            ```
+            
+        * Update the `App.js` as follows
+            
+            ```javascript
+            import React from 'react';
+            
+            const App = () => {
+              return (
+                <div>
+                Hello Learners!
+                </div>
+              )
+            }
+            
+            export default App
+            ```
+            
+* Now open the terminal, go to the location of `start-react` directory the location in which `node_modules` is present and run `npm start` .
+    
+* This will open a page on your default browser.
+    
+    ![Illustration 2](/content/articles/images/all-you-need-to-know-to-start-working-with-react/inline-image-2.png)
+    
+* Great! Now you're set up to work on react and you have created your react app.
+    
+
+### What did we learn?
+
+* In this lesson, we learned how to set up our system to create a react app.
+    
+* Then we understood what is the folder structure.
+    
+    * `node_modules` where all the codes for packages and dependencies are present.
+        
+    * `package.json` contains the list of dependencies whereas `package.lock.json` contains information about the versions of the dependencies used in the app.
+        
+    * `public` folder contains `index.html` which has one `div` with `id = "root"` where all the react code is rendered.
+        
+    * The most important folder is `the src` , has three main files `index.js` , `index.css` and `App.js` .
+        
+
+### Next Lesson?
+
+* In the upcoming lessons I will teach you about how to write html in react, how to use javascript variables to change html easily, concept of props and more.
+    
+
+Till then, bye!
