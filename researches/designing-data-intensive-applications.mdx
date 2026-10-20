@@ -1,0 +1,55 @@
+---
+title: "Designing Data-Intensive Applications"
+authors: "Martin Kleppmann (2017)"
+tag: "Distributed Systems"
+paperUrl: "https://dataintensive.net/"
+publishedAt: "2026-10-20T08:00:00Z"
+readTimeInMinutes: 10
+note: "Foundational mental models on replication topologies, partition strategies, consensus protocols, and stream processing."
+takeaways:
+  - "Single-leader vs multi-leader vs leaderless: trade-offs in write scalability, conflict resolution, and consistency."
+  - "SSTables & LSM-Trees vs B-Trees: sequential write speed vs deterministic read lookups."
+  - "Linearizability vs Serializability: single-object recency guarantees vs multi-object transaction safety."
+---
+
+Martin Kleppmann’s *Designing Data-Intensive Applications* (DDIA) is the definitive masterwork on reliable, scalable, and maintainable systems. Rather than focusing on proprietary vendor buzzwords, it dissects the immutable trade-offs governing storage engines and distributed consensus.
+
+---
+
+## 1. Storage Engines: LSM-Trees vs B-Trees
+
+Storage engines boil down to two core architectures:
+
+### Log-Structured Merge-Trees (LSM-Trees)
+- **Engineered for:** High write throughput.
+- **Mechanism:** In-memory balanced tree (MemTable) writes sequentially to disk as immutable sorted string tables (SSTables). Background compaction merges sorted runs.
+- **Examples:** RocksDB, Apache Cassandra, Google Bigtable.
+- **Trade-off:** High write amplification during compaction, but avoids random disk seeks.
+
+### B-Trees
+- **Engineered for:** Deterministic read lookups and range queries.
+- **Mechanism:** Fixed-size 4KB/8KB pages updated in-place on disk with write-ahead logging (WAL).
+- **Examples:** PostgreSQL, MySQL InnoDB, SQLite.
+- **Trade-off:** Page overwrites require random I/O and latch contention under multi-threaded writes.
+
+---
+
+## 2. Linearizability vs Serializability
+
+Engineers routinely confuse these two terms:
+
+| Property | Scope | Definition |
+| :--- | :--- | :--- |
+| **Linearizability** | Single Object | Recency guarantee: read operations always reflect the most recent committed write in real time. |
+| **Serializability** | Multi-Object Transactions | Isolation guarantee: transactions execute with equivalent outcome to some sequential ordering. |
+
+A system can be serializable without being linearizable (e.g. Snapshot Isolation with stale replica reads), and linearizable without being serializable (e.g. single-register read/write without transactions).
+
+---
+
+## 3. Distributed Consensus & Total Order Broadcast
+
+Consensus protocols (Raft, Paxos, Zab) all reduce to **Total Order Broadcast**:
+- Messages must be delivered in the identical order to all nodes.
+- No message can be lost once acknowledged.
+- This total order broadcast log serves as the state machine replication driver for distributed databases (CockroachDB, TiDB, etcd).

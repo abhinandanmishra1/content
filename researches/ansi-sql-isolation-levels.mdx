@@ -1,0 +1,59 @@
+---
+title: "A Critique of ANSI SQL Isolation Levels"
+authors: "Berenson, Bernstein, Gray, Melton, O'Neil, O'Neil (1995)"
+tag: "Databases"
+paperUrl: "https://www.microsoft.com/en-us/research/publication/a-critique-of-ansi-sql-isolation-levels/"
+publishedAt: "2026-10-20T10:00:00Z"
+readTimeInMinutes: 9
+note: "Why 'serializable' in the 1992 standard is incomplete — dissects anomalies like Write Skew and clarifies snapshot isolation."
+takeaways:
+  - "The original 1992 ANSI SQL definitions using phenomenon diagrams failed to capture Snapshot Isolation anomalies."
+  - "Introduces Write Skew: two transactions concurrently read overlapping state and perform non-overlapping writes that violate global invariants."
+  - "Snapshot Isolation provides repeatable read without read locks, but requires Serializable Snapshot Isolation (SSI) for true serializability."
+---
+
+The 1992 ANSI SQL standard defined transaction isolation in terms of three phenomena: **Dirty Read ($P1$)**, **Non-repeatable Read ($P2$)**, and **Phantom Read ($P3$)**. 
+
+In their seminal 1995 paper, Berenson, Gray, and colleagues demonstrated that these definitions are fatally flawed: they are ambiguous, fail to prohibit critical race conditions, and leave multi-version concurrency control (MVCC) engines in an architectural gray area.
+
+---
+
+## The Phenomenon Taxonomy Failure
+
+ANSI SQL defined phenomena using strict equality checks:
+
+- **$A1$ (Dirty Read):** $T1$ modifies a data item, $T2$ reads it, and $T1$ rolls back.
+- **$A2$ (Non-repeatable Read):** $T1$ reads a data item, $T2$ modifies it and commits, and $T1$ re-reads a different value.
+- **$A3$ (Phantom):** $T1$ reads a set of rows satisfying a search condition, $T2$ creates new rows satisfying that condition and commits, and $T1$ repeats the query with different results.
+
+The authors showed that the broader phenomena ($P1, P2, P3$) can occur even when the specific anomalies ($A1, A2, A3$) are avoided!
+
+---
+
+## The Discovery of Write Skew
+
+The most famous contribution of this paper is the formalization of **Write Skew**:
+
+<Callout type="warning" title="What is Write Skew?">
+Write skew occurs when two concurrent transactions read overlapping datasets, make disjoint local updates, and commit — resulting in an invalid global state that violates a database invariant.
+</Callout>
+
+### Classic Example: On-Call Doctors
+
+Imagine a hospital rule requiring at least one doctor on call:
+
+1. Doctors Alice and Bob are currently on call.
+2. Alice requests leave: $T1$ queries `SELECT COUNT(*) FROM doctors WHERE on_call = true`. The count is $2$.
+3. Concurrently, Bob requests leave: $T2$ queries `SELECT COUNT(*) FROM doctors WHERE on_call = true`. The count is $2$.
+4. $T1$ updates Alice to `on_call = false` and commits.
+5. $T2$ updates Bob to `on_call = false` and commits.
+6. **Result:** Zero doctors are on call!
+
+Under Snapshot Isolation, neither transaction experienced dirty reads, non-repeatable reads, or phantoms, yet the interleaved execution is **not serializable**.
+
+---
+
+## Architectural Implications for Modern Systems
+
+- **PostgreSQL & MySQL:** Snapshot Isolation is marketed as `REPEATABLE READ`. It prevents phantoms in point queries, but does **not** protect against Write Skew.
+- **True Serializability:** Requires two-phase locking (2PL) with predicate locks, or **Serializable Snapshot Isolation (SSI)** which tracks read-write dependency cycles (rw-antidependencies) in a graph and aborts transactions that form cycles.

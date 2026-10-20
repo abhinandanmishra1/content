@@ -1,0 +1,64 @@
+---
+title: "Model Context Protocol (MCP) Specification"
+authors: "Anthropic & Open Source Community (2024)"
+tag: "AI Infrastructure"
+paperUrl: "https://modelcontextprotocol.io/introduction"
+publishedAt: "2026-10-20T07:00:00Z"
+readTimeInMinutes: 7
+note: "Standardized open protocol enabling seamless, secure connectivity between LLM agents and external data sources & tools."
+takeaways:
+  - "Decouples agent clients from specialized tool backends via JSON-RPC 2.0 transport (stdio / SSE)."
+  - "Provides standard primitives for Resources (read-only data), Tools (executable actions), and Prompts (reusable templates)."
+  - "Enables modular agent architectures without bespoke tool glue code."
+---
+
+As Large Language Model (LLM) applications have evolved from simple chatbots into autonomous agents capable of interacting with external software ecosystems, integrating tools has historically required bespoke API wrappers for every host client.
+
+The **Model Context Protocol (MCP)**, open-sourced by Anthropic in late 2024, establishes an open standard analogous to LSP (Language Server Protocol) for LLM tools and external context.
+
+---
+
+## The Architectural Analogy: LSP for LLMs
+
+Before Microsoft introduced the Language Server Protocol (LSP), an $M \times N$ integration problem plagued development tooling: $M$ programming languages required $N$ custom plugins for $N$ text editors (VS Code, Neovim, Sublime, Emacs). LSP introduced a standardized JSON-RPC interface, reducing complexity to $M + N$.
+
+MCP accomplishes the identical abstraction for AI reasoning engines:
+
+```
+[Agent Hosts: Claude Desktop, Cursor, Custom Agents]
+                     │
+                     ▼ JSON-RPC 2.0 (stdio / SSE)
+         [Model Context Protocol (MCP)]
+                     │
+         ┌───────────┼───────────┐
+         ▼           ▼           ▼
+   [Filesystem]  [Postgres]   [GitHub API]
+```
+
+---
+
+## Core Primitives
+
+MCP models client-server capabilities around three fundamental abstractions:
+
+### 1. Resources (Passive Context)
+- Read-only data exposed to the LLM as contextual knowledge.
+- URI-based addressing (e.g. `postgres://localhost:5432/db/schema` or `file:///var/log/syslog`).
+- Subscriptions allow servers to notify clients of context mutations.
+
+### 2. Tools (Active Capabilities)
+- Executable functions that the model can invoke to take action in the external world.
+- Rigorously typed via JSON Schema for arguments and return structures.
+- Client requires human-in-the-loop authorization policies for sensitive operations.
+
+### 3. Prompts (User Workflows)
+- Pre-defined prompts and workflow templates exposed by servers.
+- Help end users execute common tasks (e.g., `/debug-issue`, `/review-pr`).
+
+---
+
+## Security & Isolation
+
+- **Process Isolation:** Stdio servers run as distinct subprocesses with their own sandboxed environment and OS-level permission scopes.
+- **Transports:** Supports standard I/O (`stdio`) for local process communication and Server-Sent Events (`SSE`) / HTTP for distributed microservices.
+- **Strict Capabilities Negotiation:** During the initial `initialize` handshake, client and server explicitly negotiate supported protocol versions and features.

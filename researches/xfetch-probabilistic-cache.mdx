@@ -1,0 +1,88 @@
+---
+title: "Optimal Probabilistic Cache Expiration with XFetch"
+authors: "Vattani, Chierichetti, Lowenstein (2015)"
+tag: "Caching"
+paperUrl: "https://vattani.org/papers/cache_expiration_vattani_vldb15.pdf"
+publishedAt: "2026-10-20T09:00:00Z"
+readTimeInMinutes: 8
+note: "TTLs as a probability distribution rather than a hard cutoff — prevents cache stampedes without cold cache recompute storms."
+takeaways:
+  - "Under heavy read loads, hard TTLs cause thousands of concurrent misses at expiration (thundering herd)."
+  - "XFetch calculates an early recompute probability: e^(-delta * beta * log(rand()) / TTL) > remaining_time."
+  - "Near expiration, a single worker proactively refreshes the cache in the background while other requests receive warm data."
+---
+
+In distributed architectures with millions of requests per second, traditional **Time-To-Live (TTL)** expiration creates a catastrophic failure mode known as the **Cache Stampede** (or Thundering Herd problem).
+
+When a popular cached object expires, hundreds or thousands of concurrent worker threads simultaneously miss the cache and issue expensive queries to the primary database, resulting in CPU saturation, connection pool exhaustion, and cascading outages.
+
+---
+
+## The XFetch Mathematical Formulation
+
+Vattani et al. proved that optimal cache expiration is **probabilistic**, not deterministic. As a key approaches its expiration time, requests have an increasing probability of triggering an asynchronous background recomputation.
+
+The decision to recompute is given by:
+
+$$-\beta \cdot \delta \cdot \ln(U) > \text{remaining\_time}$$
+
+Where:
+- $\delta$ (`delta`): The measured execution time taken to compute the value from the database.
+- $\beta$ (`beta`): A tuning constant (typically $\beta = 1.0$; values $> 1$ trigger earlier recomputation).
+- $U$: A uniform random variable in the interval $(0, 1)$.
+- $\text{remaining\_time}$: `ttl - (current_time - cached_at)`.
+
+---
+
+## Algorithm Implementation in Node.js / TypeScript
+
+```typescript
+interface CacheEntry<T> {
+  value: T;
+  delta: number; // computation duration in seconds
+  expiry: number; // absolute unix timestamp in seconds
+}
+
+export async function xfetchGet<T>(
+  key: string,
+  ttlSeconds: number,
+  recomputeFn: () => Promise<T>,
+  beta: number = 1.0,
+): Promise<T> {
+  const cached = await redis.get(key);
+  const now = Date.now() / 1000;
+
+  if (cached) {
+    const entry: CacheEntry<T> = JSON.parse(cached);
+    const remainingTime = entry.expiry - now;
+
+    // Evaluate the probabilistic recompute threshold
+    const shouldRecompute = -beta * entry.delta * Math.log(Math.random()) > remainingTime;
+
+    if (!shouldRecompute) {
+      return entry.value;
+    }
+  }
+
+  // Recompute value and measure computation latency delta
+  const startTime = Date.now() / 1000;
+  const freshValue = await recomputeFn();
+  const delta = (Date.now() / 1000) - startTime;
+
+  const newEntry: CacheEntry<T> = {
+    value: freshValue,
+    delta,
+    expiry: (Date.now() / 1000) + ttlSeconds,
+  };
+
+  await redis.set(key, JSON.stringify(newEntry), 'EX', ttlSeconds * 2);
+  return freshValue;
+}
+```
+
+---
+
+## Architectural Benefits
+
+1. **Zero Database Spikes:** At peak load, exactly one client recomputes the data right before it expires while all other clients continue reading the cached copy.
+2. **Autonomous Adaptation:** If the upstream database slows down ($\delta$ increases), the recompute probability automatically triggers earlier!
