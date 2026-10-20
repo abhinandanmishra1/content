@@ -1,0 +1,79 @@
+name: Sync Content to Portfolio
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'articles/**'
+      - 'research/**'
+  workflow_dispatch:
+
+jobs:
+  update-submodule:
+    name: Update Portfolio Submodule
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Content Repository
+        uses: actions/checkout@v4
+
+      - name: Checkout Portfolio Repository
+        uses: actions/checkout@v4
+        with:
+          repository: 'abhinandanmishra1/portfolio'
+          path: 'portfolio'
+          token: ${{ secrets.PORTFOLIO_DEPLOY_TOKEN }}
+          submodules: 'recursive'
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Update Submodule in Portfolio
+        id: update_submodule
+        run: |
+          cd portfolio
+          git submodule sync
+          git submodule update --init --recursive
+          git submodule update --remote --merge content
+          
+          if git diff --quiet content; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No submodule updates needed."
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Submodule changes detected."
+          fi
+
+      - name: Create Pull Request in Portfolio
+        if: steps.update_submodule.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PORTFOLIO_DEPLOY_TOKEN }}
+        run: |
+          cd portfolio
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          BRANCH_NAME="content-sync-${SHORT_SHA}"
+          
+          git checkout -b "$BRANCH_NAME"
+          git add content
+          git commit -m "chore(content): update content submodule to ${SHORT_SHA}"
+          git push origin "$BRANCH_NAME" --force
+          
+          PR_URL=$(gh pr create \
+            --repo abhinandanmishra1/portfolio \
+            --head "$BRANCH_NAME" \
+            --base main \
+            --title "chore(content): sync content to ${SHORT_SHA}" \
+            --body "Automated content sync from [abhinandanmishra1/content@${SHORT_SHA}](https://github.com/abhinandanmishra1/content/commit/${{ github.sha }}).
+
+          ### Summary
+          - Updated \`content\` git submodule reference to latest commit." \
+          )
+          
+          echo "Created PR: $PR_URL"
+          
+          # Attempt to auto-merge or merge the PR
+          gh pr merge "$PR_URL" --merge --delete-branch || echo "PR left open for manual merge."
