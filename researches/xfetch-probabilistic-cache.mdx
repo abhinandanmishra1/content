@@ -24,13 +24,15 @@ Vattani et al. proved that optimal cache expiration is **probabilistic**, not de
 
 The decision to recompute is given by:
 
-$$-\beta \cdot \delta \cdot \ln(U) > \text{remaining\_time}$$
+```text
+-β * δ * ln(U) > remaining_time
+```
 
 Where:
-- $\delta$ (`delta`): The measured execution time taken to compute the value from the database.
-- $\beta$ (`beta`): A tuning constant (typically $\beta = 1.0$; values $> 1$ trigger earlier recomputation).
-- $U$: A uniform random variable in the interval $(0, 1)$.
-- $\text{remaining\_time}$: `ttl - (current_time - cached_at)`.
+- `δ` (`delta`): The measured execution time taken to compute the value from the database.
+- `β` (`beta`): A tuning constant (typically `β = 1.0`; values `> 1` trigger earlier recomputation).
+- `U`: A uniform random variable in the interval `(0, 1)`.
+- `remaining_time`: `ttl - (current_time - cached_at)`.
 
 ---
 
@@ -85,4 +87,4 @@ export async function xfetchGet<T>(
 ## Architectural Benefits
 
 1. **Zero Database Spikes:** At peak load, exactly one client recomputes the data right before it expires while all other clients continue reading the cached copy.
-2. **Autonomous Adaptation:** If the upstream database slows down ($\delta$ increases), the recompute probability automatically triggers earlier!
+2. **Autonomous Adaptation:** If the upstream database slows down (`delta` increases), the recompute probability automatically triggers earlier!
